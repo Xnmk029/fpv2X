@@ -84,6 +84,10 @@ jar {
 	}
 }
 
+remapJar {
+	archiveFileName = "FPV2X_0.0.1.jar"
+}
+
 // configure the maven publication
 publishing {
 	publications {
