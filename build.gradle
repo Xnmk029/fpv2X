@@ -78,6 +78,65 @@ java {
 	targetCompatibility = JavaVersion.VERSION_17
 }
 
+def getNextVersion(String currentVersion, String updateType) {
+    def matcher = (currentVersion =~ /(\d+\.\d+\.\d+)(?:_([A-Z]))?/)
+    if (matcher.matches()) {
+        def baseNumber = matcher.group(1)
+        def suffix = matcher.group(2)
+
+        if (updateType == 'major') {
+            def parts = baseNumber.split('\\.')
+            int lastDigit = Integer.parseInt(parts[2]) + 1
+            return "${parts[0]}.${parts[1]}.${lastDigit}"
+        } else if (updateType == 'small') {
+            if (suffix == null) {
+                return "${baseNumber}_A"
+            } else {
+                char suffixChar = suffix.charAt(0)
+                if (suffixChar == 'Z') {
+                    def parts = baseNumber.split('\\.')
+                    int lastDigit = Integer.parseInt(parts[2]) + 1
+                    return "${parts[0]}.${parts[1]}.${lastDigit}_A"
+                } else {
+                    char nextSuffixChar = (char)(suffixChar + 1)
+                    return "${baseNumber}_${nextSuffixChar}"
+                }
+            }
+        }
+    }
+    return currentVersion
+}
+
+task autoIncrementVersion {
+    doFirst {
+        if (project.hasProperty('update') && project.property('update') == 'none') {
+            println ">>> FPV2X Auto-Versioning: Skipping version increment (-Pupdate=none) <<<"
+            return
+        }
+
+        def updateType = 'small'
+        if (project.hasProperty('update') && project.property('update') == 'major') {
+            updateType = 'major'
+        }
+
+        def propsFile = file('gradle.properties')
+        def props = new Properties()
+        propsFile.withInputStream { props.load(it) }
+
+        def currentVer = props.getProperty('mod_version', '0.0.1')
+        def nextVer = getNextVersion(currentVer, updateType)
+
+        props.setProperty('mod_version', nextVer)
+        propsFile.withOutputStream { props.store(it, null) }
+
+        project.version = nextVer
+        println ">>> FPV2X Auto-Versioning: mod_version updated from ${currentVer} to ${nextVer} <<<"
+    }
+}
+
+processResources.dependsOn autoIncrementVersion
+compileJava.dependsOn autoIncrementVersion
+
 jar {
 	from("LICENSE") {
 		rename { "${it}_${project.base.archivesName.get()}"}
@@ -85,7 +144,7 @@ jar {
 }
 
 remapJar {
-	archiveFileName = "FPV2X_0.0.1.jar"
+	archiveFileName = provider { "FPV2X_${project.version}.jar" }
 }
 
 // configure the maven publication
