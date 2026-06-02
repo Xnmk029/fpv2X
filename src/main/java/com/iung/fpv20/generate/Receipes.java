@@ -5,8 +5,7 @@ import com.iung.fpv20.consts.ModBlocks;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
 import net.minecraft.block.Blocks;
-import net.minecraft.data.server.recipe.RecipeExporter;
-import net.minecraft.data.server.recipe.RecipeProvider;
+import net.minecraft.data.server.recipe.RecipeJsonProvider;
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder;
 import net.minecraft.item.Items;
 import net.minecraft.recipe.book.RecipeCategory;
@@ -25,7 +24,7 @@ public class Receipes extends FabricRecipeProvider {
     }
 
     @Override
-    public void generate(RecipeExporter exporter) {
+    public void generate(Consumer<RecipeJsonProvider> exporter) {
         ShapelessRecipeJsonBuilder
                 .create(RecipeCategory.REDSTONE, RECEIVER_BLOCK)
                 .input(REDSTONE_BLOCK)
@@ -36,17 +35,4 @@ public class Receipes extends FabricRecipeProvider {
                         FabricRecipeProvider.conditionsFromItem(RECEIVER_BLOCK))
                 .offerTo(exporter);
     }
-
-//    @Override
-//    public void generate(Consumer<RecipeJsonProvider> exporter) {
-//        ShapelessRecipeJsonBuilder
-//                .create(RecipeCategory.REDSTONE, RECEIVER_BLOCK)
-//                .input(REDSTONE_BLOCK)
-//                .input(QUARTZ)
-//                .criterion(FabricRecipeProvider.hasItem(REDSTONE_BLOCK), FabricRecipeProvider.conditionsFromItem(REDSTONE_BLOCK))
-//                .criterion(FabricRecipeProvider.hasItem(QUARTZ), FabricRecipeProvider.conditionsFromItem(QUARTZ))
-//                .criterion(FabricRecipeProvider.hasItem(RECEIVER_BLOCK),
-//                        FabricRecipeProvider.conditionsFromItem(RECEIVER_BLOCK))
-//                .offerTo(exporter);
-//    }
 }

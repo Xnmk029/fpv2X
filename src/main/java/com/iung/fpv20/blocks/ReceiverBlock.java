@@ -1,7 +1,6 @@
 package com.iung.fpv20.blocks;
 
 import com.iung.fpv20.consts.ModBlocks;
-import com.mojang.serialization.MapCodec;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
@@ -20,11 +19,6 @@ import org.jetbrains.annotations.Nullable;
 public class ReceiverBlock extends BlockWithEntity {
     public ReceiverBlock(Settings settings) {
         super(settings);
-    }
-
-    @Override
-    protected MapCodec<? extends BlockWithEntity> getCodec() {
-        return null;
     }
 
     @Override
@@ -52,7 +46,7 @@ public class ReceiverBlock extends BlockWithEntity {
 
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
-        return validateTicker(type, ModBlocks.RECEIVER_BLOCK_ENTITY, ReceiverBlockEntity::tick);
+        return checkType(type, ModBlocks.RECEIVER_BLOCK_ENTITY, ReceiverBlockEntity::tick);
     }
 
 
