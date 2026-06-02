@@ -15,7 +15,6 @@ what has been upgraded in FPV2X:
 - **high-fidelity physical simulation**: implemented Uncrashed-style propeller aerodynamics, frame dimensions, motors, battery specs, and camera payload configurations.
 - **realistic visual effects**: resolved and integrated GPU-accelerated Fisheye lens post-processing with analog static vignette.
 - **flight controller model selection**: integrated dynamic Rates toggle directly in options supporting Betaflight, Actual, and KISS algorithms.
-- **enhanced gui**: consolidated quick configuration reloads and professional presets (Racing/Film, Pro Freestyle) into an elegant secondary preset menu.
 
 it can also run in forge
 by [Sinytra Connector](https://www.curseforge.com/minecraft/mc-mods/sinytra-connector).
@@ -101,7 +100,6 @@ FPV2X 中新增与改进的内容：
 - **高保真空气动力学仿真**：实现了类似 Uncrashed 的桨叶气动模型，支持机架尺寸、电机选型、电池规格、挂载相机重量以及桨叶直径和螺距的深度调参。
 - **超逼真视觉后处理特效**：修复并启用了 GPU 加速的鱼眼模拟图传镜头特效，带有精美的光学暗角与模拟高频扫描线。
 - **飞控 Rates 模型动态切换**：在设置界面中支持一键切换 Betaflight、Actual 和 KISS 飞控速率解算算法，实时重算生效。
-- **全新二级预设菜单**：将配置重载、竞速跟拍预设、专业花飞预设完美整合入二级菜单中，使主菜单布局干净、清爽。
 
 它也可以通过 [Sinytra Connector](https://www.curseforge.com/minecraft/mc-mods/sinytra-connector) 运行在 forge 中。
 当在 forge 中使用时，你需要在 `config/fpv20_common.json` 中将 `is_in_forge` 设置为 `true`。
