@@ -73,7 +73,7 @@ public class Fpv20Client implements ClientModInitializer {
             }
         });
 
-        HandledScreens.register(ScreenHandlers.RECEIVER_SCREEN_HANDLER, ReceiverScreen::new);
+        net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry.register(ScreenHandlers.RECEIVER_SCREEN_HANDLER, ReceiverScreen::new);
 //
 
         HudRenderCallback.EVENT.register(new SticksHud());

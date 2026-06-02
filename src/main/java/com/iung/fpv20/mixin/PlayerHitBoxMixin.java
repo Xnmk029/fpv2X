@@ -38,18 +38,52 @@ public abstract class PlayerHitBoxMixin extends LivingEntity {
 
     @Inject(method = "getDimensions(Lnet/minecraft/entity/EntityPose;)Lnet/minecraft/entity/EntityDimensions;", at = @At("RETURN"), cancellable = true)
     private void injected(EntityPose pose, CallbackInfoReturnable<EntityDimensions> cir) {
-//        cir.getReturnValue();
         if (((IsFlying) this).get_is_flying()) {
-            cir.setReturnValue(DIM);
+            int frame = ((IsFlying) this).get_frame_index();
+            float width = 0.5f;
+            float height = 0.15f;
+            switch (frame) {
+                case 0: // 2" Whoop
+                    width = 0.25f;
+                    height = 0.08f;
+                    break;
+                case 1: // 3" Cinewhoop
+                    width = 0.35f;
+                    height = 0.12f;
+                    break;
+                case 2: // 5" Freestyle
+                    width = 0.50f;
+                    height = 0.15f;
+                    break;
+                case 3: // 7" LongRange
+                    width = 0.68f;
+                    height = 0.20f;
+                    break;
+            }
+            cir.setReturnValue(new EntityDimensions(width, height, false));
         }
-
     }
 
     @Inject(method = "getActiveEyeHeight", at = @At("RETURN"), cancellable = true)
     private void injected(EntityPose pose, EntityDimensions dimensions, CallbackInfoReturnable<Float> cir) {
-//        cir.getReturnValue();
         if (((IsFlying) this).get_is_flying()) {
-            cir.setReturnValue(0.13f);
+            int frame = ((IsFlying) this).get_frame_index();
+            float eyeHeight = 0.13f;
+            switch (frame) {
+                case 0: // 2" Whoop
+                    eyeHeight = 0.06f;
+                    break;
+                case 1: // 3" Cinewhoop
+                    eyeHeight = 0.09f;
+                    break;
+                case 2: // 5" Freestyle
+                    eyeHeight = 0.13f;
+                    break;
+                case 3: // 7" LongRange
+                    eyeHeight = 0.17f;
+                    break;
+            }
+            cir.setReturnValue(eyeHeight);
         }
     }
 

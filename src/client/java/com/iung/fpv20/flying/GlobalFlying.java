@@ -114,8 +114,9 @@ public class GlobalFlying {
         if (p != null) {
 
             if (ClientPlayNetworking.canSend(DroneFlyPacket.TYPE)) {
-                ClientPlayNetworking.send(new DroneFlyPacket(if_fly));
+                ClientPlayNetworking.send(new DroneFlyPacket(if_fly, Fpv20Client.config1.drone.frameIndex));
             }
+            p.set_frame_index(Fpv20Client.config1.drone.frameIndex);
             p.set_is_flying(if_fly);
             client.getSoundManager().play(new FlyingSound(player));
 

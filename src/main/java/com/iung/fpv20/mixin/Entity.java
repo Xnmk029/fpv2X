@@ -33,6 +33,9 @@ public abstract class Entity extends net.minecraft.entity.Entity implements IsFl
     }
 
 
+    @Unique
+    public int frameIndex = 2;
+
     @Override
     public boolean get_is_flying() {
         return this.isFlying;
@@ -43,6 +46,16 @@ public abstract class Entity extends net.minecraft.entity.Entity implements IsFl
 
         this.isFlying = v;
         this.calculateDimensions();
+    }
+
+    @Override
+    public int get_frame_index() {
+        return this.frameIndex;
+    }
+
+    @Override
+    public void set_frame_index(int index) {
+        this.frameIndex = index;
     }
 
     @Override

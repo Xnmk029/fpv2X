@@ -6,9 +6,10 @@ out vec4 fragColor;
 
 uniform vec2 OutSize;
 
-// 桶形畸变系数（模拟鱼眼镜头）
-const float k = -0.22;
-const float kcube = -0.08;
+// 广角镜头畸变参数 (等距球面投影模型)
+const float A = 1.15;        // 畸变强度 (等效半视场角，值越大鱼眼感越强)
+const float tan_A = 1.5574;  // tan(A) 的预计算值，优化性能
+const float S = 0.85;        // 整体画面缩放/拉远系数 (值越小 FOV 越大，中心越小)
 
 void main() {
     // 将纹理坐标转换为以中心为原点的坐标 [-0.5, 0.5]
@@ -16,18 +17,18 @@ void main() {
     
     // 修正宽高比以保证桶形畸变的完美圆形对称
     float aspect = OutSize.x / OutSize.y;
-    uv.x *= aspect;
+    vec2 uv_scaled = vec2(uv.x * aspect, uv.y);
     
-    // 计算中心距离平方
-    float r2 = uv.x * uv.x + uv.y * uv.y;
+    // 计算中心距离 (物理距离)
+    float rf = length(uv_scaled);
     
-    // 桶形畸变映射公式
-    float f = 1.0 + k * r2 + kcube * r2 * r2;
+    // 计算非线性等距鱼眼映射比例
+    // 当 rf -> 0 时，根据极限，tan(rf*A)/(rf*tan(A)) 逼近 A/tan(A)
+    float scale = (rf > 0.0) ? (tan(rf * A) / (rf * tan_A)) : (A / tan_A);
+    scale *= S;
     
-    // 映射回纹理坐标区间 [0.0, 1.0]
-    vec2 distorted_uv = uv * f;
-    distorted_uv.x /= aspect;
-    distorted_uv += 0.5;
+    // 映射回原始采样纹理坐标区间 [0.0, 1.0]
+    vec2 distorted_uv = uv * scale + 0.5;
     
     // 1. 模拟圆形镜头外壳遮罩（超出画面物理畸变范围的渲染为黑色）
     if (distorted_uv.x < 0.0 || distorted_uv.x > 1.0 || distorted_uv.y < 0.0 || distorted_uv.y > 1.0) {
@@ -37,7 +38,7 @@ void main() {
         vec4 color = texture(DiffuseSampler, distorted_uv);
         
         // 2. 光学暗角（越靠近边缘越暗，模拟真实镜头发散）
-        float vignette = 1.0 - r2 * 0.35;
+        float vignette = 1.0 - rf * rf * 0.35;
         vignette = clamp(vignette, 0.0, 1.0);
         
         // 3. 微量模拟图传扫描线（CRT/扫描感，为图传风增色）

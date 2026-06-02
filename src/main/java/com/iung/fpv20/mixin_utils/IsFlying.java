@@ -8,6 +8,11 @@ public interface IsFlying {
 
     }
 
+    default int get_frame_index() {
+        return 2; // 5" by default
+    }
+    default void set_frame_index(int index) {}
+
     Object get_obj();
     void set_obj(Object obj);
 }

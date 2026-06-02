@@ -74,11 +74,12 @@ public class Fpv20 implements ModInitializer {
             } else {
                 player.getAbilities().invulnerable = (boolean) (Boolean) ((IsFlying) player).get_obj();
             }
+            ((IsFlying) player).set_frame_index(packet.frameIndex);
             ((IsFlying) player).set_is_flying(packet.fly);
 //            player.setBoundingBox(player.getDimensions(null).getBoxAt(player.getPos()));
 //            player.refreshPositionAfterTeleport(player.getPos());
 //            player.calculateDimensions();
-            Fpv20.LOGGER.info("updated");
+            Fpv20.LOGGER.info("updated fly state to: " + packet.fly + " with frame index: " + packet.frameIndex);
         });
 
     }
