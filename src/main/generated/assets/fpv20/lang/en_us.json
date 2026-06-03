@@ -32,6 +32,8 @@
   "fpv20.btn.speed_display": "Speed: %s",
   "fpv20.btn.start": "start",
   "fpv20.btn.telemetry_debug": "Telemetry Debug Log: %s",
+  "fpv20.keybind.camera_angle_down": "Decrease Camera Angle",
+  "fpv20.keybind.camera_angle_up": "Increase Camera Angle",
   "fpv20.keybind.osd": "Toggle OSD",
   "fpv20.keybinds.category": "fpv20",
   "fpv20.preset.pid.bounceback": "Bounceback",

@@ -234,3 +234,105 @@
 ### 4. 验证结果
 - 执行 `.\gradlew compileJava compileClientJava` 编译成功。
 - 在 Minecraft 客户端中开启 F3+B，验证不同机架的渲染模型物理外边沿与红线碰撞箱高度拟合；切换第一人称视角，不同机架的机体及旋翼透视大小显示合理。
+
+## 任务时间
+
+2026-06-04
+
+## 任务目标
+
+根据设计草图调整 OSD (SticksHud) UI 布局，重新编排遥测指标（档位、速度、G值、镜头角度），并适当留出边距避让鱼眼镜头畸变。
+
+## 过程记录
+
+### 1. 结构与参数重构
+- **SticksHud.java**：
+  - 将底部边距 `padding_down` 从 `11` 调整为 `20`，抬高摇杆指示十字中心高度，防止指示点贴边时因鱼眼畸变效果导致严重扭曲。
+  - 引入 `net.minecraft.util.math.Vec3d` 并获取当前飞行的 Drone 加速度。
+
+### 2. UI 界面布局调整
+- **移除旧版中心速度**：删除了原先渲染在两个摇杆十字正中间并带有半透明背景框的速度显示。
+- **全新底部四角对齐遥测**：
+  - **左下角**：展示当前 Rates 档位（支持 BF / ACT / KISS）和当前速度（以 `kb/h` 或 `b/s` 为单位）。
+  - **右下角**：展示实时物理 G 值（结合加速度计与重力合成计算所得：`|acc + (0, 9.8, 0)| / 9.8`）以及云台镜头角度。
+  - **避让边距**：设置 `margin_x = 35` 像素和统一的基准高度 `text_y`，确保文本均垂直居中对齐摇杆，且完美避开边缘高畸变区域，保障内容清晰可读。
+
+### 3. 验证结果
+- 运行 `.\gradlew compileClientJava` 和 `.\gradlew build -x test` 成功构建（BUILD SUCCESSFUL），无任何编译期及依赖性错误。
+
+## 任务时间
+
+2026-06-04
+
+## 任务目标
+
+修改 OSD 档位显示为 ACRO/3D/ANGLE 飞行模式，并添加通过快捷键动态更改镜头角度的功能。
+
+## 过程记录
+
+### 1. OSD 档位模式显示调整
+- **SticksHud.java**：
+  - 重构了左下角的“档位”数据逻辑，由原本显示 Rates 模型缩写改为直接读取并展示当前的飞行控制模式。
+  - 读取控制器遥测输入中的 `"angle"`（自稳预留模式开关）与 `"3d"`（3D模式开关）通道值，确定并渲染当前为 `ACRO`、`3D` 或 `ANGLE` 状态。
+
+### 2. 镜头角度热键功能实现
+- **Fpv20Client.java**：
+  - 新增注册两个按键绑定：`fpv20.keybind.camera_angle_up`（默认绑键为方向键上 `GLFW_KEY_UP`）与 `fpv20.keybind.camera_angle_down`（默认绑键为方向键下 `GLFW_KEY_DOWN`）。
+  - 在客户端 `END_CLIENT_TICK` 循环中监听上述按键，按键触发时以每次 ±5° 改变云台俯仰角度（限制在 0° 到 90° 之间），实时更新客户端参数配置并调用 `.save()` 自动保存。
+
+### 3. 国际化翻译与资源生成
+- **TranslateKeys.java**：新增 `KEYBIND_CAMERA_ANGLE_UP` 与 `KEYBIND_CAMERA_ANGLE_DOWN` 的键值常量。
+- **ChineseLangProvider.java / EnglishLangProvider.java**：注册并生成中英文的键位名称映射（"增大镜头仰角"/"减小镜头仰角"）。
+- 运行 `.\gradlew runDatagen` 重新生成了 `zh_cn.json` 与 `en_us.json` 资源文件。
+
+### 4. 验证结果
+- 运行 `.\gradlew build -x test` 成功，重新编译及构建测试通过，代码无任何兼容性问题。
+
+## 任务时间
+
+2026-06-04
+
+## 任务目标
+
+修改镜头角度快捷键为 `[` 和 `]`，调整角度调节步长为 1°，简化 OSD UI 遥测数据的文字标签前缀。
+
+## 过程记录
+
+### 1. 镜头角度热键与步长优化
+- **Fpv20Client.java**：
+  - 将增大/减小镜头角度的默认快捷键由方向键上下更改为中括号键：增加角度为右中括号键 `]` (`GLFW_KEY_RIGHT_BRACKET`)，减小角度为左中括号键 `[` (`GLFW_KEY_LEFT_BRACKET`)。
+  - 将每次按键改变镜头角度的步长从 `5°` 调整为 `1°`。
+
+### 2. OSD 遥测显示精简
+- **SticksHud.java**：
+  - 去除了各个遥测参数前方的提示注释字样（“档位：”、“速度：”、“G值：”、“镜头角度：”）。
+  - 直接在 HUD 四角显示核心遥测值（例如左下角：`ACRO` / `98.5 kb/h`，右下角：`1.02 G` / `35°`），视觉上更显简练和专业。
+
+### 3. 验证结果
+- 运行 `.\gradlew build -x test` 构建成功，确认所有功能点均已正确编译合入。
+
+## 任务时间
+
+2026-06-04
+
+## 任务目标
+
+修复调整 PID 参数后物理引擎发散导致 NaN 崩溃以及玩家退出飞行状态时的 ClassCastException。
+
+## 过程记录
+
+### 1. 物理引擎稳定性与子步积分（Sub-stepping）
+- **GlobalFlying.java**：
+  - 在 `apply_rotation_with_rates` 中引入了子步积分（Sub-stepping）算法。将大步长渲染帧间隔 `dt` 拆解为多个不超过 `2ms` (`0.002f`秒) 的微小子步进行物理仿真迭代。
+  - 此项改动从根本上解决了 PID 控制器中 $k_p \cdot dt > 1.0$ 时在高 P 值下导致的发散振荡问题，保证了低帧率或卡顿时控制环路依然处于稳定收敛状态。
+  - 对计算得到的横滚、俯仰、偏航角速度进行了最大 `±3000°/s` 的物理饱和截断限制，防止出现数据无限累加导致的数值爆炸。
+- **PhysicsCore.java**：
+  - 在 `rotate_by_angular_velocity` 中对积分后的四元数添加了 `Float.isNaN()` 健壮性检验，若捕获到任何 NaN 分量将自动重置归位为单位四元数（Identity Quaternion），绝对避免引起 `Invalid entity rotation: NaN` 这一崩溃行为。
+
+### 2. 玩家状态恢复安全类型转换
+- **Fpv20.java**：
+  - 修复了关闭飞行模式时将 cached 对象强制转换为 Boolean 导致的 ClassCastException 问题。
+  - 新增类型实例检查 `cached instanceof Boolean`，若验证通过则进行类型还原，否则自动回退到玩家当前的创造模式状态（`player.isCreative()`），保障数据安全性和服务端健壮性。
+
+### 3. 验证结果
+- 重新运行 `.\gradlew build -x test` 构建成功，所有子系统编译及逻辑测试合入完毕。

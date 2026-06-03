@@ -68,6 +68,9 @@ public class PhysicsCore {
 
         // 5. 归一化，防止数值漂移
         q.normalize();
+        if (Float.isNaN(q.x) || Float.isNaN(q.y) || Float.isNaN(q.z) || Float.isNaN(q.w)) {
+            q.identity();
+        }
 
         return q;
     }

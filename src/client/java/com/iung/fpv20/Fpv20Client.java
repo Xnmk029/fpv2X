@@ -6,6 +6,7 @@ import com.iung.fpv20.config.Fpv20ClientConfig1;
 import com.iung.fpv20.config.Fpv20ConfigClientManual;
 import com.iung.fpv20.config.Fpv20ConfigCommon;
 import com.iung.fpv20.consts.ScreenHandlers;
+import com.iung.fpv20.consts.TranslateKeys;
 import com.iung.fpv20.flying.GlobalFlying;
 import com.iung.fpv20.gui.handle_screen.ReceiverScreen;
 import com.iung.fpv20.gui.hud.SticksHud;
@@ -45,6 +46,8 @@ public class Fpv20Client implements ClientModInitializer {
 
     private static KeyBinding osdKeybind;
     private static KeyBinding optionsKeybind;
+    private static KeyBinding cameraAngleUpKeybind;
+    private static KeyBinding cameraAngleDownKeybind;
 
     @Override
     public void onInitializeClient() {
@@ -52,14 +55,28 @@ public class Fpv20Client implements ClientModInitializer {
                 "fpv20.keybind.osd",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_O,
-                "fpv20.keybinds.category"
+                TranslateKeys.KEYBINDS_CATEGORY
         ));
 
         optionsKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "fpv20.keybind.options",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_PERIOD,
-                "fpv20.keybinds.category"
+                TranslateKeys.KEYBINDS_CATEGORY
+        ));
+
+        cameraAngleUpKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                TranslateKeys.KEYBIND_CAMERA_ANGLE_UP,
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_RIGHT_BRACKET,
+                TranslateKeys.KEYBINDS_CATEGORY
+        ));
+
+        cameraAngleDownKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                TranslateKeys.KEYBIND_CAMERA_ANGLE_DOWN,
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_LEFT_BRACKET,
+                TranslateKeys.KEYBINDS_CATEGORY
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -70,6 +87,18 @@ public class Fpv20Client implements ClientModInitializer {
                 if (client.player != null) {
                     client.setScreen(new com.iung.fpv20.gui.screens.OptionsMainScreen(null));
                 }
+            }
+            while (cameraAngleUpKeybind.wasPressed()) {
+                float angle = config1.getCamera_angle();
+                angle = Math.min(90f, angle + 1f);
+                config1.setCamera_angle(angle);
+                config1.save();
+            }
+            while (cameraAngleDownKeybind.wasPressed()) {
+                float angle = config1.getCamera_angle();
+                angle = Math.max(0f, angle - 1f);
+                config1.setCamera_angle(angle);
+                config1.save();
             }
         });
 

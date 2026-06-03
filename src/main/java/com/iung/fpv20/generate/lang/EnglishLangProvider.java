@@ -49,6 +49,8 @@ public class EnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(TranslateKeys.BTN_OSD_OFF, "show osd: no");
         translationBuilder.add(TranslateKeys.KEYBINDS_CATEGORY, "fpv20");
         translationBuilder.add(TranslateKeys.KEYBIND_OSD, "Toggle OSD");
+        translationBuilder.add(TranslateKeys.KEYBIND_CAMERA_ANGLE_UP, "Increase Camera Angle");
+        translationBuilder.add(TranslateKeys.KEYBIND_CAMERA_ANGLE_DOWN, "Decrease Camera Angle");
 
         // New English Translations
         translationBuilder.add(TranslateKeys.BTN_POWER_PHYSICS_CONFIG, "Power & Physics Config");

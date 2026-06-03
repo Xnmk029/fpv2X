@@ -107,7 +107,8 @@ public class Fpv20 implements ModInitializer {
                         Fpv20.LOGGER.info("Spawned separate DroneEntity for pilot " + player.getName().getString() + " (ID: " + drone.getId() + ")");
                     }
                 } else {
-                    player.getAbilities().invulnerable = (boolean) (Boolean) ((IsFlying) player).get_obj();
+                    Object cached = ((IsFlying) player).get_obj();
+                    player.getAbilities().invulnerable = (cached instanceof Boolean) ? (Boolean) cached : player.isCreative();
                     
                     // Scheme A cleanup: Discard any drone entities piloted by this player
                     for (net.minecraft.entity.Entity oldDrone : player.getServerWorld().getEntitiesByType(com.iung.fpv20.Fpv20.DRONE_ENTITY_TYPE, e -> player.getUuid().equals(((DroneEntity) e).getPilotUuid()))) {

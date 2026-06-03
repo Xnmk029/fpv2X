@@ -40,6 +40,8 @@ public final class TranslateKeys {
     public static final String KEYBINDS_CATEGORY = "fpv20.keybinds.category";
 
     public static final String KEYBIND_OSD = "fpv20.keybind.osd";
+    public static final String KEYBIND_CAMERA_ANGLE_UP = "fpv20.keybind.camera_angle_up";
+    public static final String KEYBIND_CAMERA_ANGLE_DOWN = "fpv20.keybind.camera_angle_down";
 
     // New localization keys
     public static final String BTN_POWER_PHYSICS_CONFIG = "fpv20.btn.power_physics_config";

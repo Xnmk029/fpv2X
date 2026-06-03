@@ -47,6 +47,8 @@ public class ChineseLangProvider extends FabricLanguageProvider {
         translationBuilder.add(TranslateKeys.BTN_OSD_OFF, "显示OSD: 不");
         translationBuilder.add(TranslateKeys.KEYBINDS_CATEGORY, "fpv20");
         translationBuilder.add(TranslateKeys.KEYBIND_OSD, "切换OSD");
+        translationBuilder.add(TranslateKeys.KEYBIND_CAMERA_ANGLE_UP, "增大镜头仰角");
+        translationBuilder.add(TranslateKeys.KEYBIND_CAMERA_ANGLE_DOWN, "减小镜头仰角");
 
         // New Chinese Translations
         translationBuilder.add(TranslateKeys.BTN_POWER_PHYSICS_CONFIG, "动力物理配置");

@@ -32,6 +32,8 @@
   "fpv20.btn.speed_display": "速度: %s",
   "fpv20.btn.start": "开始",
   "fpv20.btn.telemetry_debug": "调试遥测日志: %s",
+  "fpv20.keybind.camera_angle_down": "减小镜头仰角",
+  "fpv20.keybind.camera_angle_up": "增大镜头仰角",
   "fpv20.keybind.osd": "切换OSD",
   "fpv20.keybinds.category": "fpv20",
   "fpv20.preset.pid.bounceback": "回弹",

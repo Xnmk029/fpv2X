@@ -596,35 +596,49 @@ public class GlobalFlying {
                 input_r, rates.type, rates.roll.rate, rates.roll.superRate, rates.roll.expo, rates.roll.centerSensitivity, rates.roll.maxRate
         );
 
-        // 1. PID闭环解算当前角速度
+        // 1. PID闭环解算当前角速度 (采用子步积分保证数值稳定性)
         com.iung.fpv20.config.Fpv20ConfigClientManual.PidPreset pidPreset = Fpv20Client.config1.pidPreset;
         if (pidPreset == null) pidPreset = com.iung.fpv20.config.Fpv20ConfigClientManual.PidPreset.NORMAL;
         
-        this.currentYawSpeed = yawPid.update(setpointYaw, this.currentYawSpeed, dt, pidPreset);
-        this.currentPitchSpeed = pitchPid.update(setpointPitch, this.currentPitchSpeed, dt, pidPreset);
-        this.currentRollSpeed = rollPid.update(setpointRoll, this.currentRollSpeed, dt, pidPreset);
-
-        // 2. 洗桨物理振动解算
         com.iung.fpv20.config.Fpv20ConfigClientManual.PropwashLevel propwashLevel = Fpv20Client.config1.propwashLevel;
         if (propwashLevel == null) propwashLevel = com.iung.fpv20.config.Fpv20ConfigClientManual.PropwashLevel.MEDIUM;
-        
-        if (propwashLevel != com.iung.fpv20.config.Fpv20ConfigClientManual.PropwashLevel.PERFECT) {
-            float input_t = controller.get_value_by_name("t");
-            float throttleVal = (input_t + 1f) / 2f;
-            
-            Vec3d worldVel = drone.get_speed();
-            Vector3f velocityVec = new Vector3f((float) worldVel.x, (float) worldVel.y, (float) worldVel.z);
-            
-            Vector3f disturbance = propwashSimulator.calculateDisturbance(
-                velocityVec, q, throttleVal, propwashLevel, dt
-            );
-            
-            this.currentRollSpeed += disturbance.x;
-            this.currentPitchSpeed += disturbance.y;
-            this.currentYawSpeed += disturbance.z;
-        }
 
-        // 指数映射：实际角速度向量 -> 增量四元数 -> 右乘核心四元数 -> 归一化
-        PhysicsCore.rotate_by_angular_velocity(q, this.currentRollSpeed, this.currentPitchSpeed, this.currentYawSpeed, dt);
+        float maxStep = 0.002f; // 最大子步时长 2ms
+        float remainingTime = dt;
+        while (remainingTime > 0.0f) {
+            float sub_dt = Math.min(remainingTime, maxStep);
+            if (sub_dt < 0.0001f) {
+                break;
+            }
+
+            this.currentYawSpeed = yawPid.update(setpointYaw, this.currentYawSpeed, sub_dt, pidPreset);
+            this.currentPitchSpeed = pitchPid.update(setpointPitch, this.currentPitchSpeed, sub_dt, pidPreset);
+            this.currentRollSpeed = rollPid.update(setpointRoll, this.currentRollSpeed, sub_dt, pidPreset);
+
+            if (propwashLevel != com.iung.fpv20.config.Fpv20ConfigClientManual.PropwashLevel.PERFECT) {
+                float input_t = controller.get_value_by_name("t");
+                float throttleVal = (input_t + 1f) / 2f;
+                
+                Vec3d worldVel = drone.get_speed();
+                Vector3f velocityVec = new Vector3f((float) worldVel.x, (float) worldVel.y, (float) worldVel.z);
+                
+                Vector3f disturbance = propwashSimulator.calculateDisturbance(
+                    velocityVec, q, throttleVal, propwashLevel, sub_dt
+                );
+                
+                this.currentRollSpeed += disturbance.x;
+                this.currentPitchSpeed += disturbance.y;
+                this.currentYawSpeed += disturbance.z;
+            }
+
+            // 限制最大角速度，防止数值发散/溢出导致 NaN 崩溃
+            this.currentRollSpeed = Math.max(-3000.0f, Math.min(3000.0f, this.currentRollSpeed));
+            this.currentPitchSpeed = Math.max(-3000.0f, Math.min(3000.0f, this.currentPitchSpeed));
+            this.currentYawSpeed = Math.max(-3000.0f, Math.min(3000.0f, this.currentYawSpeed));
+
+            PhysicsCore.rotate_by_angular_velocity(q, this.currentRollSpeed, this.currentPitchSpeed, this.currentYawSpeed, sub_dt);
+
+            remainingTime -= sub_dt;
+        }
     }
 }

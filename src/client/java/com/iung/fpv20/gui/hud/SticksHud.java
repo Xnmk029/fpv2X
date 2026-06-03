@@ -6,6 +6,7 @@ import com.iung.fpv20.input.Controller;
 import com.iung.fpv20.utils.Utils;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.Objects;
 
@@ -22,7 +23,7 @@ public class SticksHud implements HudRenderCallback {
     public SticksHud() {
         this.size = 40;
         this.padding_between = 10;
-        this.padding_down = 11;
+        this.padding_down = 20;
 
 
         this.t = () -> Utils.requireNonNullOr(Fpv20Client.controller, c -> c.get_calibrated_value_no_rate(c.get_channel_id("t")), 0f);
@@ -67,29 +68,63 @@ public class SticksHud implements HudRenderCallback {
         fill_centered(drawContext, start_x_1 + size / 2 + y(), start_y + size / 2 - t(), 2, WHITE);
         fill_centered(drawContext, start_x_2 + size / 2 + r(), start_y + size / 2 - p(), 2, WHITE);
 
-        int speedMode = Fpv20Client.config.getSpeedDisplayMode();
-        if (speedMode != 0 && GlobalFlying.G.getDrone() != null) {
-            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
-            if (mc.textRenderer != null) {
-                double speedMS = GlobalFlying.G.getDrone().get_speed().length();
-                String text = "";
-                if (speedMode == 1) {
-                    text = String.format("%.1f b/s", speedMS);
-                } else if (speedMode == 2) {
-                    double speedKBH = speedMS * 3.6;
-                    text = String.format("%.1f kb/h", speedKBH);
-                }
-                int textWidth = mc.textRenderer.getWidth(text);
-                int drawX = window_width / 2 - textWidth / 2;
-                int drawY = start_y + size / 2 - 4;
-                drawContext.fill(drawX - 2, drawY - 2, drawX + textWidth + 2, drawY + 8 + 2, 0xAA000000);
-                drawContext.drawTextWithShadow(mc.textRenderer, text, drawX, drawY, 0XFFFFFFFF);
+        net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+        if (mc.textRenderer != null) {
+            String modeName = "ACRO";
+            if (Fpv20Client.controller != null) {
+                try {
+                    if (Fpv20Client.controller.get_value_by_name("angle") > 0.5f) {
+                        modeName = "ANGLE";
+                    } else if (Fpv20Client.controller.get_value_by_name("3d") > 0.5f) {
+                        modeName = "3D";
+                    }
+                } catch (Exception ignored) {}
             }
+            String modeText = modeName;
+
+            double speedMS = 0;
+            double gValue = 1.0;
+            com.iung.fpv20.physics.Drone drone = GlobalFlying.G.getDrone();
+            if (drone != null) {
+                speedMS = drone.get_speed().length();
+                Vec3d acc = drone.get_acceleration();
+                if (acc != null) {
+                    gValue = acc.add(0, 9.8, 0).length() / 9.8;
+                }
+            }
+
+            int speedMode = Fpv20Client.config.getSpeedDisplayMode();
+            String speedText = "";
+            if (speedMode == 1) {
+                speedText = String.format("%.1f b/s", speedMS);
+            } else {
+                double speedKBH = speedMS * 3.6;
+                speedText = String.format("%.1f kb/h", speedKBH);
+            }
+
+            String gForceText = String.format("%.2f G", gValue);
+            String cameraAngleText = String.format("%.0f°", Fpv20Client.config1.getCamera_angle());
+
+            int margin_x = 35;
+            int text_y = start_y + size / 2 - 4;
+
+            drawContext.drawTextWithShadow(mc.textRenderer, modeText, margin_x, text_y, WHITE);
+
+            int modeWidth = mc.textRenderer.getWidth(modeText);
+            int drawX_speed = margin_x + modeWidth + 15;
+            drawContext.drawTextWithShadow(mc.textRenderer, speedText, drawX_speed, text_y, WHITE);
+
+            int cameraAngleWidth = mc.textRenderer.getWidth(cameraAngleText);
+            int drawX_cameraAngle = window_width - margin_x - cameraAngleWidth;
+            drawContext.drawTextWithShadow(mc.textRenderer, cameraAngleText, drawX_cameraAngle, text_y, WHITE);
+
+            int gForceWidth = mc.textRenderer.getWidth(gForceText);
+            int drawX_gForce = drawX_cameraAngle - gForceWidth - 15;
+            drawContext.drawTextWithShadow(mc.textRenderer, gForceText, drawX_gForce, text_y, WHITE);
         }
 
         // Live Telemetry Logging for Debugging
         if (Fpv20Client.config1.show_telemetry_debug) {
-            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
             if (mc.textRenderer != null) {
                 int logY = 10;
                 int logX = 10;
