@@ -5,6 +5,9 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.text.Text;
+import net.minecraft.client.render.DiffuseLighting;
+import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.util.math.RotationAxis;
 
 public class ThrustConfigScreen extends BackableScreen {
 
@@ -90,6 +93,8 @@ public class ThrustConfigScreen extends BackableScreen {
     private float currentPropDia;
     private float currentPropPitch;
     private boolean localLinear;
+    private float droneYaw = 0f;
+    private float propRotation = 0f;
 
     private ButtonWidget frameBtn;
     private ButtonWidget motorBtn;
@@ -128,12 +133,24 @@ public class ThrustConfigScreen extends BackableScreen {
     protected void init() {
         super.init();
 
-        int i = this.width / 2 - 155;
-        int j = this.width / 2 + 5;
+        int i = this.width / 2 - 230;
+        int j = this.width / 2 - 110;
         int y = 20;
-        int width = 150;
+        int width = 140;
         int height = 20;
         int step = 22;
+
+        // Reposition OK & Cancel buttons from BackableScreen to avoid overlapping the 3D preview
+        if (this.okButton != null) {
+            this.okButton.setX(i);
+            this.okButton.setY(this.height - 25);
+            this.okButton.setWidth(width);
+        }
+        if (this.cancelButton != null) {
+            this.cancelButton.setX(j);
+            this.cancelButton.setY(this.height - 25);
+            this.cancelButton.setWidth(width);
+        }
 
         // Title
         this.addDrawableChild(new TextWidget(i, y, width * 2 + 10, height, Text.literal("穿越机配件选型与物理累计调参 (Uncrashed Tuning)"), this.textRenderer));
@@ -204,7 +221,7 @@ public class ThrustConfigScreen extends BackableScreen {
         }).dimensions(j, y, 25, height).build());
         
         propDiaIndicator = ButtonWidget.builder(Text.literal(currentPropDia + "\""), (btn) -> {})
-            .dimensions(j + 30, y, 90, height).build();
+            .dimensions(j + 30, y, 80, height).build();
         propDiaIndicator.active = false;
         this.addDrawableChild(propDiaIndicator);
 
@@ -212,7 +229,7 @@ public class ThrustConfigScreen extends BackableScreen {
             currentPropDia = Math.min(FRAMES[currentFrameIndex].maxProp, (float) Math.round((currentPropDia + 0.1f) * 10f) / 10f);
             clampPropDiameter();
             updateButtonLabels();
-        }).dimensions(j + 125, y, 25, height).build());
+        }).dimensions(j + 115, y, 25, height).build());
         y += step;
 
         // 7. Prop Pitch Row
@@ -223,14 +240,14 @@ public class ThrustConfigScreen extends BackableScreen {
         }).dimensions(j, y, 25, height).build());
         
         propPitchIndicator = ButtonWidget.builder(Text.literal(currentPropPitch + "\""), (btn) -> {})
-            .dimensions(j + 30, y, 90, height).build();
+            .dimensions(j + 30, y, 80, height).build();
         propPitchIndicator.active = false;
         this.addDrawableChild(propPitchIndicator);
 
         this.addDrawableChild(ButtonWidget.builder(Text.literal("+"), (btn) -> {
             currentPropPitch = Math.min(12.0f, (float) Math.round((currentPropPitch + 0.1f) * 10f) / 10f);
             updateButtonLabels();
-        }).dimensions(j + 125, y, 25, height).build());
+        }).dimensions(j + 115, y, 25, height).build());
     }
 
     private void updateButtonLabels() {
@@ -261,9 +278,9 @@ public class ThrustConfigScreen extends BackableScreen {
     public void render(net.minecraft.client.gui.DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
-        int i = this.width / 2 - 155;
-        int j = this.width / 2 + 5;
-        int width = 150;
+        int i = this.width / 2 - 230;
+        int j = this.width / 2 - 110;
+        int width = 140;
 
         // Calculate cumulative physical stats
         float stackWeight = 50f;
@@ -288,7 +305,7 @@ public class ThrustConfigScreen extends BackableScreen {
         float massKg = totalWeight / 1000f;
         float twr = maxThrustN / (massKg * 9.8f);
 
-        // Draw dynamic assessment panel at the bottom
+        // Draw dynamic assessment panel at the bottom (aligned left to match columns)
         int panelY = this.height - 78;
         context.fill(i, panelY, j + width, panelY + 48, 0xAA000000); // dark transparent bg
 
@@ -318,6 +335,79 @@ public class ThrustConfigScreen extends BackableScreen {
 
         String twrText = String.format("推重比 (TWR): %.1f  [%s]", twr, perfLevel);
         context.drawTextWithShadow(this.textRenderer, Text.literal(twrText), i + 10, panelY + 26, twrColor);
+
+        // Update rotation angles for real-time 3D drone animation
+        this.droneYaw += delta * 1.5f;
+        this.propRotation += delta * 45.0f;
+
+        // Render the 3D drone preview viewport on the right
+        int centerX = this.width / 2 + 120;
+        int centerY = this.height / 2 - 10;
+        int boxWidth = 170;
+        int boxHeight = 160;
+        int boxX = centerX - boxWidth / 2;
+        int boxY = centerY - boxHeight / 2;
+
+        // Draw viewport background: tech semi-transparent dark-cyan
+        context.fill(boxX, boxY, boxX + boxWidth, boxY + boxHeight, 0x99081C26);
+        // Neon border decoration
+        context.fill(boxX, boxY, boxX + boxWidth, boxY + 1, 0xFF00FFFF);
+        context.fill(boxX, boxY + boxHeight - 1, boxX + boxWidth, boxY + boxHeight, 0xFF00FFFF);
+        context.fill(boxX, boxY, boxX + 1, boxY + boxHeight, 0xFF00FFFF);
+        context.fill(boxX + boxWidth - 1, boxY, boxX + boxWidth, boxY + boxHeight, 0xFF00FFFF);
+
+        // Tech sub-corners inside viewport
+        context.fill(boxX + 4, boxY + 4, boxX + 14, boxY + 5, 0x8800FFFF);
+        context.fill(boxX + 4, boxY + 4, boxX + 5, boxY + 14, 0x8800FFFF);
+        context.fill(boxX + boxWidth - 14, boxY + 4, boxX + boxWidth - 4, boxY + 5, 0x8800FFFF);
+        context.fill(boxX + boxWidth - 5, boxY + 4, boxX + boxWidth - 4, boxY + 14, 0x8800FFFF);
+        context.fill(boxX + 4, boxY + boxHeight - 5, boxX + 14, boxY + boxHeight - 4, 0x8800FFFF);
+        context.fill(boxX + 4, boxY + boxHeight - 14, boxX + 5, boxY + boxHeight - 4, 0x8800FFFF);
+        context.fill(boxX + boxWidth - 14, boxY + boxHeight - 5, boxX + boxWidth - 4, boxY + boxHeight - 4, 0x8800FFFF);
+        context.fill(boxX + boxWidth - 5, boxY + boxHeight - 14, boxX + boxWidth - 4, boxY + boxHeight - 4, 0x8800FFFF);
+
+        // Tech indicators/labels
+        context.drawTextWithShadow(this.textRenderer, Text.literal("3D REALTIME PREVIEW"), boxX + 8, boxY + 8, 0xFF00FFFF);
+        context.drawTextWithShadow(this.textRenderer, Text.literal("STATUS: SWAPPABLE"), boxX + 8, boxY + boxHeight - 14, 0xAA00FFFF);
+
+        // 3D Rendering Pipeline Setup
+        net.minecraft.client.util.math.MatrixStack matrices = context.getMatrices();
+        matrices.push();
+        // Position the drone model inside the box
+        matrices.translate(centerX, centerY + 10, 250.0);
+        // Scale appropriately (negating Y to keep standard Up position in Minecraft's Gui space)
+        matrices.scale(55.0f, -55.0f, 55.0f);
+
+        // Scientific tilt: 20-deg pitched down, and continuous slow rotation
+        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(20.0f));
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(droneYaw));
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0f));
+
+        // Enable diffuse GUI depth lighting for shadows & depth
+        DiffuseLighting.enableGuiDepthLighting();
+
+        // Pass matrices and custom component configurations to renderDrone
+        com.iung.fpv20.utils.DroneModelRenderer.renderDrone(
+            matrices,
+            context.getVertexConsumers(),
+            0xF000F0, // full light
+            OverlayTexture.DEFAULT_UV,
+            currentFrameIndex,
+            currentMotorIndex,
+            currentBatteryIndex,
+            currentCameraIndex,
+            currentPropDia,
+            currentPropPitch,
+            propRotation
+        );
+
+        // Flush rendering buffer
+        context.draw();
+
+        // Reset depth lighting state
+        DiffuseLighting.disableGuiDepthLighting();
+
+        matrices.pop();
     }
 
     @Override

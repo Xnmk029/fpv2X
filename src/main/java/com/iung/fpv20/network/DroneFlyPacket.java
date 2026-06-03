@@ -12,22 +12,29 @@ public class DroneFlyPacket implements FabricPacket {
 
     public boolean fly;
     public int frameIndex;
+    public int controlMode; // 0 = Scheme B (Player Avatar), 1 = Scheme A (Remote Entity)
+    public float cameraAngle;
 
     private DroneFlyPacket(PacketByteBuf buf) {
         this.fly = buf.readBoolean();
         this.frameIndex = buf.readInt();
+        this.controlMode = buf.readInt();
+        this.cameraAngle = buf.readFloat();
     }
 
-    public DroneFlyPacket(boolean fly, int frameIndex) {
+    public DroneFlyPacket(boolean fly, int frameIndex, int controlMode, float cameraAngle) {
         this.fly = fly;
         this.frameIndex = frameIndex;
+        this.controlMode = controlMode;
+        this.cameraAngle = cameraAngle;
     }
-
 
     @Override
     public void write(PacketByteBuf buf) {
         buf.writeBoolean(this.fly);
         buf.writeInt(this.frameIndex);
+        buf.writeInt(this.controlMode);
+        buf.writeFloat(this.cameraAngle);
     }
 
     @Override

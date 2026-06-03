@@ -11,6 +11,8 @@ import com.iung.fpv20.physics.PhysicsCore;
 import com.iung.fpv20.physics.Plane;
 import com.iung.fpv20.sound.FlyingSound;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import com.iung.fpv20.entity.DroneEntity;
+import com.iung.fpv20.network.DroneControlPacket;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
@@ -24,11 +26,14 @@ import static com.iung.fpv20.utils.LocalMath.DEG_TO_RAD;
 
 public class GlobalFlying {
     public static GlobalFlying G = new GlobalFlying(0);
+
+    public DroneEntity activeClientDroneEntity = null;
+    public float clientPropRotation = 0.0f;
 //    private float lastCamRoll;
 //    private float camRoll;
 
-    private Quaternionf lastDroneRotation;
-    private Quaternionf droneRotation;
+    public Quaternionf lastDroneRotation;
+    public Quaternionf droneRotation;
 
     private float last_update_time;
     /**
@@ -114,7 +119,8 @@ public class GlobalFlying {
         if (p != null) {
 
             if (ClientPlayNetworking.canSend(DroneFlyPacket.TYPE)) {
-                ClientPlayNetworking.send(new DroneFlyPacket(if_fly, Fpv20Client.config1.drone.frameIndex));
+                int mode = (Fpv20Client.config1.controlMode == com.iung.fpv20.config.Fpv20ConfigClientManual.ControlMode.SCHEME_A) ? 1 : 0;
+                ClientPlayNetworking.send(new DroneFlyPacket(if_fly, Fpv20Client.config1.drone.frameIndex, mode, Fpv20Client.config1.getCamera_angle()));
             }
             p.set_frame_index(Fpv20Client.config1.drone.frameIndex);
             p.set_is_flying(if_fly);
@@ -431,10 +437,20 @@ public class GlobalFlying {
         Vec3d v1 = drone.get_speed();
 
 
-        if (in_slow_motion) {
-            p.setVelocity(v1.multiply(Fpv20Client.config1.slow_motion_time_rate * 0.05));
+        if (Fpv20Client.config1.controlMode == com.iung.fpv20.config.Fpv20ConfigClientManual.ControlMode.SCHEME_A) {
+            if (activeClientDroneEntity != null) {
+                Vec3d step = v1.multiply(dt);
+                Vec3d newPos = activeClientDroneEntity.getPos().add(step);
+                activeClientDroneEntity.setPosition(newPos);
+                activeClientDroneEntity.setVelocity(v1.multiply(0.05));
+            }
+            p.setVelocity(Vec3d.ZERO);
         } else {
-            p.setVelocity(v1.multiply(0.05));
+            if (in_slow_motion) {
+                p.setVelocity(v1.multiply(Fpv20Client.config1.slow_motion_time_rate * 0.05));
+            } else {
+                p.setVelocity(v1.multiply(0.05));
+            }
         }
 
 
@@ -475,7 +491,9 @@ public class GlobalFlying {
             }
             Fpv20.LOGGER.info("start flying");
 
-            drone.update_pose(PhysicsCore.from_ypr_deg(yaw, pitch, 0));
+            Quaternionf initPose = PhysicsCore.from_ypr_deg(yaw, pitch, 0);
+            initPose.rotateLocalX(Fpv20Client.config1.getCamera_angle() * DEG_TO_RAD);
+            drone.update_pose(initPose);
         }
         this.last_tick_flying = getFlying();
 
@@ -487,6 +505,16 @@ public class GlobalFlying {
         }
 
         float input_t = controller.get_value_by_name("t");
+        float throttleVal = 0.0f;
+        try {
+            throttleVal = (input_t + 1f) / 2f;
+        } catch (Exception ignored) {}
+        float spinSpeed = 300f + throttleVal * 1500f;
+        this.clientPropRotation += dt * spinSpeed;
+        if (this.clientPropRotation > 360f) {
+            this.clientPropRotation -= 360f;
+        }
+
         apply_rotation_with_rates(q, controller, dt);
         drone.update_pose(q);
         this.set_drone_rotation(q);
@@ -495,22 +523,40 @@ public class GlobalFlying {
         Vector3f new_ypr = PhysicsCore.from_quaternion_to_ypr_deg(this.cacl_cam_rotation());
 
 
-        if (Fpv20.config.in_fabric()) {
-            if (!Fpv20Client.config1.free_camera_yaw) {
-                p.setYaw(new_ypr.x);
-            }
-            if (!Fpv20Client.config1.free_camera_pitch) {
-                p.setPitch(new_ypr.y);
+        if (Fpv20Client.config1.controlMode == com.iung.fpv20.config.Fpv20ConfigClientManual.ControlMode.SCHEME_A) {
+            if (activeClientDroneEntity != null) {
+                activeClientDroneEntity.setYaw(new_ypr.x);
+                activeClientDroneEntity.setPitch(new_ypr.y);
+                activeClientDroneEntity.setQuaternion(q);
+
+                // High frequency synchronization
+                if (ClientPlayNetworking.canSend(DroneControlPacket.TYPE)) {
+                    Vec3d pos = activeClientDroneEntity.getPos();
+                    Vec3d vel = activeClientDroneEntity.getVelocity();
+                    ClientPlayNetworking.send(new DroneControlPacket(
+                        activeClientDroneEntity.getId(),
+                        pos.x, pos.y, pos.z,
+                        vel.x, vel.y, vel.z,
+                        q.x, q.y, q.z, q.w
+                    ));
+                }
             }
         } else {
-            if (!Fpv20Client.config1.free_camera_yaw) {
-                p.setYaw(180);
+            if (Fpv20.config.in_fabric()) {
+                if (!Fpv20Client.config1.free_camera_yaw) {
+                    p.setYaw(new_ypr.x);
+                }
+                if (!Fpv20Client.config1.free_camera_pitch) {
+                    p.setPitch(new_ypr.y);
+                }
+            } else {
+                if (!Fpv20Client.config1.free_camera_yaw) {
+                    p.setYaw(180);
+                }
+                if (!Fpv20Client.config1.free_camera_pitch) {
+                    p.setPitch(0);
+                }
             }
-            if (!Fpv20Client.config1.free_camera_pitch) {
-                p.setPitch(0);
-            }
-//            p.setYaw(180);
-//            p.setPitch(0);
         }
     }
 

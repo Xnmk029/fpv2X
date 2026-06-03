@@ -9,6 +9,9 @@ import net.minecraft.text.Text;
 
 public abstract class BackableScreen extends Screen {
     public final Screen parent;
+    protected ButtonWidget okButton;
+    protected ButtonWidget cancelButton;
+    protected ButtonWidget backButton;
 
     protected BackableScreen(Text title, Screen parent) {
         super(title);
@@ -47,18 +50,18 @@ public abstract class BackableScreen extends Screen {
         int height = 20;
 
         if (this.hasOkButton()) {
-            this.addDrawableChild(ButtonWidget.builder(Text.translatable("gui.cancel"), (btn) -> {
+            this.cancelButton = this.addDrawableChild(ButtonWidget.builder(Text.translatable("gui.cancel"), (btn) -> {
                         this.close();
                     })
                     .dimensions(j, this.height - 5 - height, width, height).build());
 
-            this.addDrawableChild(ButtonWidget.builder(Text.translatable("gui.ok"), (btn) -> {
+            this.okButton = this.addDrawableChild(ButtonWidget.builder(Text.translatable("gui.ok"), (btn) -> {
                         this.onOk();
                         this.close();
                     })
                     .dimensions(i, this.height - 5 - height, width, height).build());
         } else {
-            this.addDrawableChild(ButtonWidget.builder(Text.translatable("gui.back"), (btn) -> {
+            this.backButton = this.addDrawableChild(ButtonWidget.builder(Text.translatable("gui.back"), (btn) -> {
                         this.close();
                     })
                     .dimensions(i, this.height - 5 - height, width * 2 + 10, height).build());

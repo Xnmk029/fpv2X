@@ -2,7 +2,7 @@
 
 [English](#english) | [简体中文](#简体中文)
 
-`<a name="english"></a>`
+<a id="english"></a>
 
 ## description
 
@@ -85,7 +85,7 @@ toggling the sticks on the screen (OSD):
 
 ---
 
-`<a name="简体中文"></a>`
+<a id="简体中文"></a>
 
 # FPV2X (简体中文)
 

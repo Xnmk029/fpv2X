@@ -85,6 +85,13 @@ public class Fpv20ConfigClientManual {
     public PhysicsSettings physics = new PhysicsSettings();
     public boolean enableFisheye = true;
 
+    public static enum ControlMode {
+        SCHEME_A, // 远程遥控实体模式 (Separate Entity Mode)
+        SCHEME_B  // 玩家代理模式 (Player Avatar Mode)
+    }
+
+    public ControlMode controlMode = ControlMode.SCHEME_B; // 默认为方案B (Player Avatar Mode)
+
     /////////////////////////////////
     public float getCamera_angle() {
         return camera_angle;
@@ -122,6 +129,7 @@ public class Fpv20ConfigClientManual {
         if (config.rates.pitch == null) config.rates.pitch = new RateAxis();
         if (config.rates.yaw == null) config.rates.yaw = new RateAxis();
         if (config.physics == null) config.physics = new PhysicsSettings();
+        if (config.controlMode == null) config.controlMode = ControlMode.SCHEME_B;
         
         return config;
     }

@@ -5,8 +5,11 @@ import com.iung.fpv20.Fpv20Client;
 import com.iung.fpv20.flying.GlobalFlying;
 import com.iung.fpv20.input.Controller;
 import com.iung.fpv20.utils.FastMath;
+import com.iung.fpv20.utils.DroneModelRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.RotationAxis;
 import org.joml.Quaternionf;
@@ -171,11 +174,47 @@ public abstract class GameRendererMixin implements com.iung.fpv20.mixin_utils.Ga
             method = "renderHand",
             at = @At("HEAD"), cancellable = true
     )
-    public void mixin12(MatrixStack matrices, Camera camera, float tickDelta, CallbackInfo ci) {
+    public void fpv20_renderDroneInFirstPerson(MatrixStack matrices, Camera camera, float tickDelta, CallbackInfo ci) {
         if (GlobalFlying.getFlying()) {
+            // Render drone model in first-person view so propellers are visible at screen edges
+            MinecraftClient client = MinecraftClient.getInstance();
+            if (client.player != null) {
+                matrices.push();
+
+                // Position the drone body relative to camera: slightly below and behind
+                // the camera to simulate real FPV perspective where propellers are visible
+                 float camAngle = Fpv20Client.config1.getCamera_angle();
+                 org.joml.Quaternionf q = new org.joml.Quaternionf(GlobalFlying.G.droneRotation).conjugate();
+                 
+                 matrices.multiply(q);
+                 matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0f));
+                 matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camAngle));
+                 matrices.translate(0.0f, -0.1f, -0.28f);
+
+                // Render full drone model using immediate-mode vertex consumer
+                VertexConsumerProvider.Immediate immediate = client.getBufferBuilders().getEntityVertexConsumers();
+                int light = 0xF000F0; // Full brightness for FPV overlay
+                DroneModelRenderer.renderDrone(
+                        matrices,
+                        immediate,
+                        light,
+                        OverlayTexture.DEFAULT_UV,
+                        Fpv20Client.config1.drone.frameIndex,
+                        Fpv20Client.config1.drone.motorIndex,
+                        Fpv20Client.config1.drone.batteryIndex,
+                        Fpv20Client.config1.drone.cameraIndex,
+                        Fpv20Client.config1.drone.selectedPropDia,
+                        Fpv20Client.config1.drone.selectedPropPitch,
+                        GlobalFlying.G.clientPropRotation
+                );
+                immediate.draw();
+
+                matrices.pop();
+            }
             ci.cancel();
         }
     }
 
 
 }
+

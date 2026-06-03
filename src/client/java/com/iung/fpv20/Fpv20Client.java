@@ -78,6 +78,8 @@ public class Fpv20Client implements ClientModInitializer {
 
         HudRenderCallback.EVENT.register(new SticksHud());
 
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(Fpv20.DRONE_ENTITY_TYPE, com.iung.fpv20.client.renderer.DroneEntityRenderer::new);
+
         ClientTickEvents.START_CLIENT_TICK.register((e) -> {
             Controller controller1 = controller;
             if (controller1 != null) {
@@ -99,9 +101,29 @@ public class Fpv20Client implements ClientModInitializer {
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
             ClientPlayerEntity player = client.player;
             if (player != null) {
+                if (GlobalFlying.getFlying() && Fpv20Client.config1.controlMode == com.iung.fpv20.config.Fpv20ConfigClientManual.ControlMode.SCHEME_A) {
+                    if (GlobalFlying.G.activeClientDroneEntity == null || !GlobalFlying.G.activeClientDroneEntity.isAlive()) {
+                        for (net.minecraft.entity.Entity entity : client.world.getEntities()) {
+                            if (entity instanceof com.iung.fpv20.entity.DroneEntity drone) {
+                                if (player.getUuid().equals(drone.getPilotUuid())) {
+                                    GlobalFlying.G.activeClientDroneEntity = drone;
+                                    client.setCameraEntity(drone);
+                                    Fpv20.LOGGER.info("Client successfully hijacked camera to separate DroneEntity (ID: " + drone.getId() + ")");
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    if (client.getCameraEntity() != player && client.getCameraEntity() instanceof com.iung.fpv20.entity.DroneEntity) {
+                        client.setCameraEntity(player);
+                        Fpv20.LOGGER.info("Client restored camera to player.");
+                    }
+                    GlobalFlying.G.activeClientDroneEntity = null;
+                }
+
                 GlobalFlying.G.update_tick_start(player);
                 GlobalFlying.G.handle_flying_phy(player, 0.05f);
-//                GlobalFlying.G.handle_flying(client);
             }
         });
 

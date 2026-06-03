@@ -1,0 +1,61 @@
+{
+	"format_version": "1.21.11",
+	"credit": "Made with Blockbench",
+	"textures": {
+		"0": "fpv20:item/drone_metal"
+	},
+	"elements": [
+		{
+			"name": "base",
+			"from": [-1.5, 0, -1.5],
+			"to": [1.5, 0.5, 1.5],
+			"faces": {
+				"north": {"uv": [0, 0, 3, 0.5], "texture": "#0"},
+				"east": {"uv": [0, 0, 3, 0.5], "texture": "#0"},
+				"south": {"uv": [0, 0, 3, 0.5], "texture": "#0"},
+				"west": {"uv": [0, 0, 3, 0.5], "texture": "#0"},
+				"up": {"uv": [0, 0, 3, 3], "texture": "#0"},
+				"down": {"uv": [0, 0, 3, 3], "texture": "#0"}
+			}
+		},
+		{
+			"name": "stator_coils",
+			"from": [-1.2, 0.5, -1.2],
+			"to": [1.2, 1.5, 1.2],
+			"faces": {
+				"north": {"uv": [0, 0, 2.4, 1], "texture": "#0"},
+				"east": {"uv": [0, 0, 2.4, 1], "texture": "#0"},
+				"south": {"uv": [0, 0, 2.4, 1], "texture": "#0"},
+				"west": {"uv": [0, 0, 2.4, 1], "texture": "#0"},
+				"up": {"uv": [0, 0, 2.4, 2.4], "texture": "#0"},
+				"down": {"uv": [0, 0, 2.4, 2.4], "texture": "#0"}
+			}
+		},
+		{
+			"name": "rotor_bell",
+			"from": [-1.6, 1.5, -1.6],
+			"to": [1.6, 2.5, 1.6],
+			"faces": {
+				"north": {"uv": [0, 0, 3.2, 1], "texture": "#0"},
+				"east": {"uv": [0, 0, 3.2, 1], "texture": "#0"},
+				"south": {"uv": [0, 0, 3.2, 1], "texture": "#0"},
+				"west": {"uv": [0, 0, 3.2, 1], "texture": "#0"},
+				"up": {"uv": [0, 0, 3.2, 3.2], "texture": "#0"},
+				"down": {"uv": [0, 0, 3.2, 3.2], "texture": "#0"}
+			}
+		},
+		{
+			"name": "shaft",
+			"from": [-0.3, 2.5, -0.3],
+			"to": [0.3, 3.5, 0.3],
+			"faces": {
+				"north": {"uv": [0, 0, 0.6, 1], "texture": "#0"},
+				"east": {"uv": [0, 0, 0.6, 1], "texture": "#0"},
+				"south": {"uv": [0, 0, 0.6, 1], "texture": "#0"},
+				"west": {"uv": [0, 0, 0.6, 1], "texture": "#0"},
+				"up": {"uv": [0, 0, 0.6, 0.6], "texture": "#0"},
+				"down": {"uv": [0, 0, 0.6, 0.6], "texture": "#0"}
+			}
+		}
+	]
+}
