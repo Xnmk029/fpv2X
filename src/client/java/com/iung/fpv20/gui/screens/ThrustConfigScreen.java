@@ -1,6 +1,12 @@
 package com.iung.fpv20.gui.screens;
 
 import com.iung.fpv20.Fpv20Client;
+import com.iung.fpv20.flying.GlobalFlying;
+import com.iung.fpv20.mixin_utils.IsFlying;
+import com.iung.fpv20.network.DroneFlyPacket;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextWidget;
@@ -376,7 +382,7 @@ public class ThrustConfigScreen extends BackableScreen {
         // Position the drone model inside the box
         matrices.translate(centerX, centerY + 10, 250.0);
         // Scale appropriately (negating Y to keep standard Up position in Minecraft's Gui space)
-        matrices.scale(55.0f, -55.0f, 55.0f);
+        matrices.scale(110.0f, -110.0f, 110.0f);
 
         // Scientific tilt: 20-deg pitched down, and continuous slow rotation
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(20.0f));
@@ -451,6 +457,17 @@ public class ThrustConfigScreen extends BackableScreen {
         Fpv20Client.config1.drone.batteryCells = BATTERIES[currentBatteryIndex].cells;
         Fpv20Client.config1.drone.propDiameter = currentPropDia;
         Fpv20Client.config1.drone.propPitch = currentPropPitch;
+
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player != null && GlobalFlying.getFlying()) {
+            IsFlying p = (IsFlying) client.player;
+            p.set_frame_index(currentFrameIndex);
+            
+            if (ClientPlayNetworking.canSend(DroneFlyPacket.TYPE)) {
+                int mode = (Fpv20Client.config1.controlMode == com.iung.fpv20.config.Fpv20ConfigClientManual.ControlMode.SCHEME_A) ? 1 : 0;
+                ClientPlayNetworking.send(new DroneFlyPacket(true, currentFrameIndex, mode, Fpv20Client.config1.getCamera_angle()));
+            }
+        }
 
         Fpv20Client.config1.save();
     }

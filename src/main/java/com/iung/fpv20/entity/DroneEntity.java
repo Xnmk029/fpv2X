@@ -1,6 +1,8 @@
 package com.iung.fpv20.entity;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityDimensions;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
@@ -88,6 +90,33 @@ public class DroneEntity extends Entity {
 
     public void setFrameIndex(int val) {
         this.dataTracker.set(FRAME_INDEX, val);
+        this.calculateDimensions();
+    }
+
+    @Override
+    public EntityDimensions getDimensions(EntityPose pose) {
+        int frame = this.getFrameIndex();
+        float width = 0.5f;
+        float height = 0.15f;
+        switch (frame) {
+            case 0: // 2" Whoop
+                width = 0.25f;
+                height = 0.08f;
+                break;
+            case 1: // 3" Cinewhoop
+                width = 0.35f;
+                height = 0.12f;
+                break;
+            case 2: // 5" Freestyle
+                width = 0.50f;
+                height = 0.15f;
+                break;
+            case 3: // 7" LongRange
+                width = 0.68f;
+                height = 0.20f;
+                break;
+        }
+        return new EntityDimensions(width, height, false);
     }
 
     public int getMotorIndex() {

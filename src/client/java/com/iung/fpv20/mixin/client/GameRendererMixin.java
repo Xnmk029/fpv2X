@@ -187,7 +187,25 @@ public abstract class GameRendererMixin implements com.iung.fpv20.mixin_utils.Ga
                 org.joml.Quaternionf q = new org.joml.Quaternionf(GlobalFlying.G.droneRotation).conjugate();
                 matrices.multiply(q);
                 matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0f));
-                matrices.translate(0.0f, -0.15f, -0.30f);
+                 int frameIndex = Fpv20Client.config1.drone.frameIndex;
+                 float frameScale = 1.0f;
+                 switch (frameIndex) {
+                     case 0: // 2" Whoop
+                         frameScale = 0.5f;
+                         break;
+                     case 1: // 3" Cinewhoop
+                         frameScale = 0.72f;
+                         break;
+                     case 2: // 5" Freestyle
+                         frameScale = 1.0f;
+                         break;
+                     case 3: // 7" LongRange
+                         frameScale = 1.35f;
+                         break;
+                 }
+                 float yOffset = -0.05f * frameScale;
+                 float zOffset = -0.18f * frameScale;
+                 matrices.translate(0.0f, yOffset, zOffset);
 
                 VertexConsumerProvider.Immediate immediate = client.getBufferBuilders().getEntityVertexConsumers();
                 int light = 0xF000F0;

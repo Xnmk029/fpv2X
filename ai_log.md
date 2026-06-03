@@ -207,3 +207,30 @@
 - 执行 `.\gradlew compileJava` 编译成功。
 - 执行 `.\gradlew runDatagen` 数据生成正常。
 - 执行 `.\gradlew runclient` 成功拉起游戏客户端，实际飞行调试证实 PID 五档响应以及洗桨在给油拉起时的频段振动符合预期。
+
+
+## 任务时间
+
+2026-06-04
+
+## 任务目标
+
+修正穿越机 3D 模型渲染比例与碰撞箱不贴合的问题，并为不同大小的机架实现适配的第一人称视角模型偏移，以及独立实体的碰撞箱动态更新。
+
+## 过程记录
+
+### 1. 模型渲染尺寸调整
+- **DroneModelRenderer.java**：将基础模型渲染缩放倍率从 `0.0625f`（1/16）降低至 `0.03125f`（1/32），渲染体积缩小 50%，使各机架渲染大小完美对应其物理碰撞箱尺寸（例如 5" Freestyle 宽度对齐为约 0.53 米，而碰撞箱为 0.5 米）。
+- **ThrustConfigScreen.java**：将 3D 预览渲染器视口缩放比例从 `55.0f` 提高到 `110.0f` 进行尺寸补偿，使设置面板内的模型视觉大小保持一致。
+
+### 2. 第一人称视角模型自适应偏移
+- **GameRendererMixin.java**：在第一人称渲染视角 `fpv20_renderDroneInFirstPerson` 中，根据当前选择机架的 `frameIndex`（2"、3"、5"、7"）计算其缩放比 `frameScale`。
+- 将第一人称模型偏移量的平移坐标进行自适应计算调整：`matrices.translate(0.0f, -0.075f * frameScale, -0.15f * frameScale)`，确保各种机身大小与镜头的透视距离合理，不产生主视野遮挡。
+
+### 3. 独立实体碰撞箱动态管理
+- **DroneEntity.java**：引入 `EntityDimensions`，重载 `getDimensions(EntityPose pose)` 方法。
+- 根据所选机架索引在 Scheme A 下动态重塑实体碰撞箱和宽度高度（2"为 0.25x0.08，3"为 0.35x0.12，5"为 0.50x0.15，7"为 0.68x0.20），并在 `setFrameIndex` 方法中主动调用 `this.calculateDimensions()` 以使得碰撞箱变化能及时刷新。
+
+### 4. 验证结果
+- 执行 `.\gradlew compileJava compileClientJava` 编译成功。
+- 在 Minecraft 客户端中开启 F3+B，验证不同机架的渲染模型物理外边沿与红线碰撞箱高度拟合；切换第一人称视角，不同机架的机体及旋翼透视大小显示合理。

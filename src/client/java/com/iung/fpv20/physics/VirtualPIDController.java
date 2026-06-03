@@ -26,28 +26,28 @@ public class VirtualPIDController {
 
         switch (preset) {
             case SNAPPY:
-                kP = 25.0f;
-                kI = 5.0f;
-                kD = 0.8f;
-                lpfT = 0.015f; // Very fast motor response (15ms)
+                kP = 55.0f;
+                kI = 15.0f;
+                kD = 1.8f;
+                lpfT = 0.003f; // 3ms delay (extremely close to perfect)
                 break;
             case NORMAL:
-                kP = 15.0f;
-                kI = 8.0f;
-                kD = 0.6f;
-                lpfT = 0.03f; // Normal motor response (30ms)
+                kP = 40.0f;
+                kI = 12.0f;
+                kD = 1.2f;
+                lpfT = 0.006f; // 6ms delay (very responsive, natural feel)
                 break;
             case SOFT:
-                kP = 8.0f;
+                kP = 28.0f;
                 kI = 10.0f;
-                kD = 0.4f;
-                lpfT = 0.06f; // Sluggish/smooth motor response (60ms)
+                kD = 0.8f;
+                lpfT = 0.012f; // 12ms delay (smooth but still highly responsive)
                 break;
             case BOUNCEBACK:
-                kP = 35.0f; // High P
-                kI = 5.0f;
-                kD = 0.15f; // Very low D -> underdamped
-                lpfT = 0.02f;
+                kP = 65.0f; // High P for crisp response and strong overshoot
+                kI = 10.0f;
+                kD = 0.3f;  // Very low D to allow underdamped oscillations
+                lpfT = 0.004f; // 4ms delay
                 break;
             case PERFECT:
             default:

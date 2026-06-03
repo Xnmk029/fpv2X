@@ -39,23 +39,44 @@ public class PropwashSimulator {
         // 2. Calculate descent speed along the propeller axis (positive when falling in propwash direction)
         float descentSpeed = -droneUp.dot(velocity);
 
-        // Propwash occurs when falling downward relative to the prop disc (descentSpeed > 1.5 m/s)
-        // and throttle is applied (throttle > 0.1)
-        if (descentSpeed > 1.5f && throttle > 0.1f) {
-            // Factor is proportional to descent speed (up to a limit) and throttle
-            // Propwash peaks when throttle is around 0.3 - 0.7 during a pull-out
-            float propwashFactor = Math.min(1.0f, (descentSpeed - 1.5f) / 10.0f) * throttle;
+        // 3. Calculate propeller RPM and slipstream wash velocity Ve
+        int batteryCells = com.iung.fpv20.Fpv20Client.config1.drone.batteryCells;
+        float motorKv = com.iung.fpv20.Fpv20Client.config1.drone.motorKv;
+        float propDiameter = com.iung.fpv20.Fpv20Client.config1.drone.propDiameter;
+        float propPitch = com.iung.fpv20.Fpv20Client.config1.drone.propPitch;
+
+        float rawMaxRPM = motorKv * batteryCells * 3.7f;
+        float loadFactor = 5.4f / (float) Math.pow(propDiameter, 1.1f);
+        float maxRPM = Math.min(rawMaxRPM * loadFactor, rawMaxRPM);
+        float rpm = Math.max(0.0f, throttle) * maxRPM;
+
+        // Propeller wash (slipstream) velocity Ve in m/s
+        float Ve = rpm * 0.0254f * (propPitch + 0.5f) / 60f;
+
+        // Propwash occurs when:
+        // - Drone is falling along the thrust axis (descentSpeed > 0.5 m/s)
+        // - Propellers are spinning and generating wash (Ve > 1.0 m/s)
+        if (descentSpeed > 0.5f && Ve > 1.0f) {
+            // Propwash is strongest when the descent speed matches the propeller wash velocity (ratio ≈ 1.0)
+            float ratio = descentSpeed / Ve;
+            // Gaussian envelope centered at 1.0
+            float envelope = (float) Math.exp(-Math.pow(ratio - 1.0f, 2) / 0.25f);
+            
+            // Wash strength scales with RPM (Ve) up to a saturation limit
+            float washStrength = Math.min(1.0f, Ve / 12.0f);
+            
+            float propwashFactor = washStrength * envelope;
             
             float intensityMultiplier = 0.0f;
             switch (level) {
                 case LOW:
-                    intensityMultiplier = 15.0f; // Max ~15 deg/s jitter
+                    intensityMultiplier = 20.0f; // Max ~20 deg/s jitter
                     break;
                 case MEDIUM:
-                    intensityMultiplier = 35.0f; // Max ~35 deg/s jitter
+                    intensityMultiplier = 45.0f; // Max ~45 deg/s jitter
                     break;
                 case HIGH:
-                    intensityMultiplier = 75.0f; // Max ~75 deg/s jitter (very violent)
+                    intensityMultiplier = 95.0f; // Max ~95 deg/s jitter (very violent)
                     break;
                 case PERFECT:
                 default:
@@ -65,7 +86,6 @@ public class PropwashSimulator {
             float maxJitter = propwashFactor * intensityMultiplier;
 
             // Generate bandpass/pink-like noise: new_noise = old_noise * (1 - alpha) + random * alpha
-            // Typically FPV propwash frequency is around 20Hz - 50Hz.
             float alpha = dt / (0.02f + dt); // 20ms correlation time
             float targetNoiseX = (random.nextFloat() * 2.0f - 1.0f) * maxJitter;
             float targetNoiseY = (random.nextFloat() * 2.0f - 1.0f) * maxJitter;
@@ -78,7 +98,7 @@ public class PropwashSimulator {
             disturbance.y = noiseY; // Pitch jitter
             disturbance.z = noiseX * 0.1f; // Minor yaw jitter
         } else {
-            // Decay noise to zero when not in propwash
+            // Decay noise to zero when not in propwash conditions
             float decay = dt / (0.1f + dt);
             noiseX = noiseX + (0.0f - noiseX) * decay;
             noiseY = noiseY + (0.0f - noiseY) * decay;

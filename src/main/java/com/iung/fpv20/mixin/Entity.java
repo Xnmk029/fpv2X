@@ -56,6 +56,7 @@ public abstract class Entity extends net.minecraft.entity.Entity implements IsFl
     @Override
     public void set_frame_index(int index) {
         this.frameIndex = index;
+        this.calculateDimensions();
     }
 
     @Override

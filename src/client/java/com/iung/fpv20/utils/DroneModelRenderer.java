@@ -34,10 +34,18 @@ public class DroneModelRenderer {
         public float[] uvSouth = {0, 0, 16, 16};
         public float[] uvWest = {0, 0, 16, 16};
         public float[] uvEast = {0, 0, 16, 16};
+
+        public int texUp = 0;
+        public int texDown = 0;
+        public int texNorth = 0;
+        public int texSouth = 0;
+        public int texWest = 0;
+        public int texEast = 0;
     }
 
     public static class DroneModel {
         public final List<ModelCube> cubes = new ArrayList<>();
+        public final java.util.Map<Integer, Identifier> textureMap = new java.util.HashMap<>();
 
         public DroneModel(Identifier modelId) {
             try {
@@ -45,6 +53,23 @@ public class DroneModelRenderer {
                 if (resourceOpt.isPresent()) {
                     try (InputStreamReader reader = new InputStreamReader(resourceOpt.get().getInputStream(), StandardCharsets.UTF_8)) {
                         JsonObject obj = GSON.fromJson(reader, JsonObject.class);
+                        
+                        if (obj.has("textures")) {
+                            JsonObject texObj = obj.getAsJsonObject("textures");
+                            for (java.util.Map.Entry<String, JsonElement> entry : texObj.entrySet()) {
+                                try {
+                                    int key = Integer.parseInt(entry.getKey());
+                                    String val = entry.getValue().getAsString();
+                                    String[] split = val.split(":");
+                                    String namespace = split[0];
+                                    String path = "textures/" + split[1] + ".png";
+                                    textureMap.put(key, new Identifier(namespace, path));
+                                } catch (Exception e) {
+                                    // ignore invalid textures
+                                }
+                            }
+                        }
+
                         if (obj.has("elements")) {
                             JsonArray elements = obj.getAsJsonArray("elements");
                             for (JsonElement element : elements) {
@@ -68,11 +93,22 @@ public class DroneModelRenderer {
 
                                 if (elemObj.has("rotation")) {
                                     JsonObject rotObj = elemObj.getAsJsonObject("rotation");
-                                    cube.rotation = new float[]{
-                                            rotObj.has("x") ? rotObj.get("x").getAsFloat() : 0f,
-                                            rotObj.has("y") ? rotObj.get("y").getAsFloat() : 0f,
-                                            rotObj.has("z") ? rotObj.get("z").getAsFloat() : 0f
-                                    };
+                                    cube.rotation = new float[3];
+                                    if (rotObj.has("angle") && rotObj.has("axis")) {
+                                        float angle = rotObj.get("angle").getAsFloat();
+                                        String axis = rotObj.get("axis").getAsString();
+                                        if (axis.equalsIgnoreCase("x")) {
+                                            cube.rotation[0] = angle;
+                                        } else if (axis.equalsIgnoreCase("y")) {
+                                            cube.rotation[1] = angle;
+                                        } else if (axis.equalsIgnoreCase("z")) {
+                                            cube.rotation[2] = angle;
+                                        }
+                                    } else {
+                                        cube.rotation[0] = rotObj.has("x") ? rotObj.get("x").getAsFloat() : 0f;
+                                        cube.rotation[1] = rotObj.has("y") ? rotObj.get("y").getAsFloat() : 0f;
+                                        cube.rotation[2] = rotObj.has("z") ? rotObj.get("z").getAsFloat() : 0f;
+                                    }
                                     JsonArray origArr = rotObj.getAsJsonArray("origin");
                                     cube.origin = new float[]{
                                             origArr.get(0).getAsFloat(),
@@ -84,11 +120,17 @@ public class DroneModelRenderer {
                                 if (elemObj.has("faces")) {
                                     JsonObject facesObj = elemObj.getAsJsonObject("faces");
                                     cube.uvUp = parseFaceUv(facesObj, "up");
+                                    cube.texUp = parseFaceTexture(facesObj, "up");
                                     cube.uvDown = parseFaceUv(facesObj, "down");
+                                    cube.texDown = parseFaceTexture(facesObj, "down");
                                     cube.uvNorth = parseFaceUv(facesObj, "north");
+                                    cube.texNorth = parseFaceTexture(facesObj, "north");
                                     cube.uvSouth = parseFaceUv(facesObj, "south");
+                                    cube.texSouth = parseFaceTexture(facesObj, "south");
                                     cube.uvWest = parseFaceUv(facesObj, "west");
+                                    cube.texWest = parseFaceTexture(facesObj, "west");
                                     cube.uvEast = parseFaceUv(facesObj, "east");
+                                    cube.texEast = parseFaceTexture(facesObj, "east");
                                 }
                                 cubes.add(cube);
                             }
@@ -96,9 +138,25 @@ public class DroneModelRenderer {
                     }
                 }
             } catch (Exception e) {
-                // Fail silently or print error
                 e.printStackTrace();
             }
+        }
+
+        private int parseFaceTexture(JsonObject facesObj, String faceName) {
+            if (facesObj.has(faceName)) {
+                JsonObject faceObj = facesObj.getAsJsonObject(faceName);
+                if (faceObj.has("texture")) {
+                    String texStr = faceObj.get("texture").getAsString();
+                    if (texStr.startsWith("#")) {
+                        try {
+                            return Integer.parseInt(texStr.substring(1));
+                        } catch (NumberFormatException e) {
+                            return 0;
+                        }
+                    }
+                }
+            }
+            return 0;
         }
 
         private float[] parseFaceUv(JsonObject facesObj, String faceName) {
@@ -145,7 +203,7 @@ public class DroneModelRenderer {
 
         matrices.push();
         // Scale down to match normal block scale
-        matrices.scale(0.0625f, 0.0625f, 0.0625f);
+        matrices.scale(0.03125f, 0.03125f, 0.03125f);
 
         // Frame configuration mapping
         float frameScale = 1.0f;
@@ -172,8 +230,7 @@ public class DroneModelRenderer {
         // 1. Draw Frame
         matrices.push();
         matrices.scale(frameScale, frameScale, frameScale);
-        VertexConsumer frameConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(new Identifier("fpv20", "textures/item/drone_carbon.png")));
-        drawModel(matrices, frameModel, frameConsumer, light, overlay);
+        drawModel(matrices, frameModel, vertexConsumers, new Identifier("fpv20", "textures/item/drone_carbon.png"), light, overlay);
         matrices.pop();
 
         // 2. Draw Battery on top plate
@@ -211,8 +268,7 @@ public class DroneModelRenderer {
         matrices.push();
         matrices.translate(0, 3.5f * frameScale, 0);
         matrices.scale(batScaleX * frameScale, batScaleY * frameScale, batScaleZ * frameScale);
-        VertexConsumer batteryConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(new Identifier("fpv20", "textures/item/drone_battery.png")));
-        drawModel(matrices, batteryModel, batteryConsumer, light, overlay);
+        drawModel(matrices, batteryModel, vertexConsumers, new Identifier("fpv20", "textures/item/drone_battery.png"), light, overlay);
         matrices.pop();
 
         // 3. Draw Camera / Payload
@@ -270,9 +326,6 @@ public class DroneModelRenderer {
 
         float propScale = propDiameter / 5.0f;
 
-        VertexConsumer motorConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(new Identifier("fpv20", "textures/item/drone_metal.png")));
-        VertexConsumer propConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(new Identifier("fpv20", "textures/item/drone_propeller.png")));
-
         for (int i = 0; i < 4; i++) {
             float[] coord = motorCoords[i];
             matrices.push();
@@ -281,7 +334,7 @@ public class DroneModelRenderer {
             // Draw motor
             matrices.push();
             matrices.scale(motorScale * frameScale, motorScale * frameScale, motorScale * frameScale);
-            drawModel(matrices, motorModel, motorConsumer, light, overlay);
+            drawModel(matrices, motorModel, vertexConsumers, new Identifier("fpv20", "textures/item/drone_metal.png"), light, overlay);
             matrices.pop();
 
             // Draw propeller on top of motor
@@ -292,7 +345,7 @@ public class DroneModelRenderer {
             float direction = (i == 0 || i == 3) ? -1f : 1f;
             matrices.multiply(RotationAxis.POSITIVE_Y.rotation(propRotationAngle * direction));
 
-            drawModel(matrices, propellerModel, propConsumer, light, overlay);
+            drawModel(matrices, propellerModel, vertexConsumers, new Identifier("fpv20", "textures/item/drone_propeller.png"), light, overlay);
 
             matrices.pop(); // prop
             matrices.pop(); // motor
@@ -301,7 +354,7 @@ public class DroneModelRenderer {
         matrices.pop(); // overall
     }
 
-    private static void drawModel(MatrixStack matrices, DroneModel model, VertexConsumer consumer, int light, int overlay) {
+    private static void drawModel(MatrixStack matrices, DroneModel model, VertexConsumerProvider vertexConsumers, Identifier defaultTexture, int light, int overlay) {
         if (model == null || model.cubes.isEmpty()) return;
 
         for (ModelCube cube : model.cubes) {
@@ -333,21 +386,36 @@ public class DroneModelRenderer {
 
             Matrix4f boxMatrix = matrices.peek().getPositionMatrix();
 
+            VertexConsumer upConsumer = getConsumerForFace(model, vertexConsumers, defaultTexture, cube.texUp);
+            VertexConsumer downConsumer = getConsumerForFace(model, vertexConsumers, defaultTexture, cube.texDown);
+            VertexConsumer northConsumer = getConsumerForFace(model, vertexConsumers, defaultTexture, cube.texNorth);
+            VertexConsumer southConsumer = getConsumerForFace(model, vertexConsumers, defaultTexture, cube.texSouth);
+            VertexConsumer westConsumer = getConsumerForFace(model, vertexConsumers, defaultTexture, cube.texWest);
+            VertexConsumer eastConsumer = getConsumerForFace(model, vertexConsumers, defaultTexture, cube.texEast);
+
             // 1. Up (+Y)
-            drawFace(boxMatrix, consumer, minX, maxY, minZ, maxX, maxY, maxZ, 0, 1, 0, cube.uvUp, light, overlay);
+            drawFace(boxMatrix, upConsumer, minX, maxY, minZ, maxX, maxY, maxZ, 0, 1, 0, cube.uvUp, light, overlay);
             // 2. Down (-Y)
-            drawFace(boxMatrix, consumer, minX, minY, minZ, maxX, minY, maxZ, 0, -1, 0, cube.uvDown, light, overlay);
+            drawFace(boxMatrix, downConsumer, minX, minY, minZ, maxX, minY, maxZ, 0, -1, 0, cube.uvDown, light, overlay);
             // 3. North (-Z)
-            drawFace(boxMatrix, consumer, minX, minY, minZ, maxX, maxY, minZ, 0, 0, -1, cube.uvNorth, light, overlay);
+            drawFace(boxMatrix, northConsumer, minX, minY, minZ, maxX, maxY, minZ, 0, 0, -1, cube.uvNorth, light, overlay);
             // 4. South (+Z)
-            drawFace(boxMatrix, consumer, minX, minY, maxZ, maxX, maxY, maxZ, 0, 0, 1, cube.uvSouth, light, overlay);
+            drawFace(boxMatrix, southConsumer, minX, minY, maxZ, maxX, maxY, maxZ, 0, 0, 1, cube.uvSouth, light, overlay);
             // 5. West (-X)
-            drawFace(boxMatrix, consumer, minX, minY, minZ, minX, maxY, maxZ, -1, 0, 0, cube.uvWest, light, overlay);
+            drawFace(boxMatrix, westConsumer, minX, minY, minZ, minX, maxY, maxZ, -1, 0, 0, cube.uvWest, light, overlay);
             // 6. East (+X)
-            drawFace(boxMatrix, consumer, maxX, minY, minZ, maxX, maxY, maxZ, 1, 0, 0, cube.uvEast, light, overlay);
+            drawFace(boxMatrix, eastConsumer, maxX, minY, minZ, maxX, maxY, maxZ, 1, 0, 0, cube.uvEast, light, overlay);
 
             matrices.pop();
         }
+    }
+
+    private static VertexConsumer getConsumerForFace(DroneModel model, VertexConsumerProvider vertexConsumers, Identifier defaultTexture, int textureKey) {
+        Identifier tex = model.textureMap.get(textureKey);
+        if (tex == null) {
+            tex = defaultTexture;
+        }
+        return vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(tex));
     }
 
     private static void drawFace(Matrix4f matrix, VertexConsumer consumer, float minX, float minY, float minZ,
