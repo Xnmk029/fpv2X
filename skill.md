@@ -16,6 +16,6 @@
 - **物理量与公式**：RPM（转速）、Ve（流速）、ic（效率修正因子）、bounciness（弹性系数）、groundFriction（地面滑动摩擦）
 - **开发工具**：Mixin、Raycast、Gradlew、Fabric
 
-## 3.任务过程记录
+## 3. 任务过程记录
 
 - 每一次完成任务后，都要使用**规范化**的语言将过程记录至`ai_log.md`文档中

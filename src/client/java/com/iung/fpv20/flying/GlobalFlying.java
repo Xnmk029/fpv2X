@@ -578,6 +578,7 @@ public class GlobalFlying {
                 input_r, rates.type, rates.roll.rate, rates.roll.superRate, rates.roll.expo, rates.roll.centerSensitivity, rates.roll.maxRate
         );
 
-        PhysicsCore.rotate_from_local_yaw_pitch_roll(q, yawSpeed, pitchSpeed, rollSpeed, 1.0f, 1.0f, 1.0f, dt);
+        // 指数映射：角速度向量 -> 增量四元数 -> 右乘核心四元数 -> 归一化
+        PhysicsCore.rotate_by_angular_velocity(q, rollSpeed, pitchSpeed, yawSpeed, dt);
     }
 }

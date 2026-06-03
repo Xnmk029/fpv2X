@@ -172,3 +172,4 @@ publishing {
 
 //sourceSets.main.java.srcDirs += [ 'src/main/generatedJava' ]
 //compileJava.options.generatedSourceOutputDirectory = file("${projectDir}/src/main/generatedJava/com/iung/fpv20/config")
+

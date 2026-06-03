@@ -57,6 +57,8 @@ public class Fpv20ConfigClientManual {
     public float slow_motion_time_rate = 0.2f;
     public String slow_motion_switch_name = "sm";
 
+    public boolean throttle_display_in_center = true;
+
     // --- Rates & Physics Configurations ---
     public static class RateAxis {
         public float rate = 1.0f;

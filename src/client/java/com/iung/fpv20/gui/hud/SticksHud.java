@@ -137,7 +137,9 @@ public class SticksHud implements HudRenderCallback {
 
 
     int t() {
-        return Math.round(this.t.get() * size - size / 2f);
+        return Fpv20Client.config1.throttle_display_in_center ?
+                Math.round(this.t.get() * size / 2f)
+                : Math.round(this.t.get() * size - size / 2f);
     }
 
     int y() {

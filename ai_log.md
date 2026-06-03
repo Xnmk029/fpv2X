@@ -89,3 +89,69 @@
 2. **断开恢复与销毁**：
 
    - 退出飞控或断开遥控时，无人机立即平滑消失，视角瞬间安全返回玩家自身。
+
+
+## 任务时间
+
+2026-06-03
+
+## 任务目标
+
+修复 readme.md 中的中英文跳转功能，并将开发规则规范更新为工作区 Skill 文件。
+
+## 过程记录
+
+### 1. 问题分析与修复
+
+- **跳转失效原因**：在原 `readme.md` 中，定义英文与中文定位点的 HTML 锚点 `<a name="english"></a>` 和 `<a name="简体中文"></a>` 被包裹在了 Markdown 反引号代码标记内（即作为行内代码块渲染）。这导致其无法被渲染引擎识别为实际的 HTML 锚点元素，从而导致页面顶部的中英文切换链接无法正常跳转。
+- **锚点重构**：移除了锚点标签周围的反引号，并将已废弃的 `name` 属性升级为推荐的 `id` 属性，将其修正为 `<a id="english"></a>` 与 `<a id="简体中文"></a>`，从而恢复了中英文文档之间的锚点跳转功能。
+
+### 2. 工作区开发规则更新
+
+- **创建 Skill 文件**：将原 `claude.md` 重构并重命名为工作区规范文件 `skill.md`，明确了后续主要沟通语言使用中文、Artifact 工件（实现计划等）全面采用中文编写且禁用 emoji、思考链内部使用英文、术语规范以及开发日志自动记录等核心开发规则。
+- **重构实现计划**：依据新规重新编写并生成了 SO(3) 姿态运动学转换设计方案（`implementation_plan.md`），确保内容完全采用简体中文且无任何 emoji 字符。
+
+
+## 任务时间
+
+2026-06-03
+
+## 任务目标
+
+将无人机姿态控制系统的旋转更新从顺序单轴旋转重构为基于指数映射的单步增量四元数更新，消除高角速度下的旋转顺序误差。
+
+## 过程记录
+
+### 1. 问题分析
+
+- **顺序旋转误差**：原 `PhysicsCore.rotate_from_local_yaw_pitch_roll` 方法中依次调用 `rotateLocalZ`（Roll）、`rotateLocalX`（Pitch）、`rotateLocalY`（Yaw），各自构造单轴增量四元数并依次右乘。数学上等价于 `q_new = q * dq_Z * dq_X * dq_Y`，而物理上三轴角速度是同时作用的，正确更新应为指数映射 `q_new = q * exp(omega * dt / 2)`。当 Rates 角速度较高（如 Roll 1000 deg/s 以上连续翻滚）时，顺序旋转会引入可感知的姿态漂移。
+
+### 2. 代码修改
+
+- **PhysicsCore.java**：新增 `rotate_by_angular_velocity` 方法，接收三轴角速度（度/秒）和时间步长 dt，通过指数映射（Exponential Map）将三轴角速度合成为一个旋转向量，一次性构造增量四元数 `delta_q`，再右乘到核心四元数上并归一化。包含小角度线性近似分支以避免除零。同时将原 `rotate_from_local_yaw_pitch_roll` 方法的内部实现委托给新方法，保持向后兼容。
+- **GlobalFlying.java**：在 `apply_rotation_with_rates` 方法末尾，将调用从旧方法替换为直接调用 `PhysicsCore.rotate_by_angular_velocity(q, rollSpeed, pitchSpeed, yawSpeed, dt)`，使数据流管线更加清晰。
+
+### 3. 验证结果
+
+- 执行编译命令 `./gradlew compileJava compileClientJava`，构建结果为 BUILD SUCCESSFUL，无任何编译错误。
+- 所有外部接口（Drone 接口、DroneEntity DataTracker、DroneControlPacket 网络包、渲染 Mixin、OSD HUD）保持完全不变。
+
+### 4. 映射与方向问题排查及修复
+
+- **问题现象**：在实际飞行测试中，低速和原地测试时，Yaw（偏航）和 Pitch（俯仰）轴控制相反，且高速时姿态发生严重错乱。
+- **排查原因**：
+  - JOML 的 `rotateLocalX/Y/Z` 等方法虽然名字带有 "Local"，但在其数学内部实现上其实是进行**左乘**（Pre-multiplication，即 `dq * q`），以配合摄像机世界至视口变换的约定。
+  - 在首次指数映射实现中，我们误以为机体局部旋转应用右乘（Hamilton 乘法顺序 `q * dq`），导致更新公式变为 $q_{\text{new}} = q_{\text{old}} \otimes dq$，这与原版的左乘链 $q_{\text{new}} = dq_Y \otimes dq_X \otimes dq_Z \otimes q_{\text{old}}$ 在三维空间旋转顺序和方向上产生根本冲突。这就造成了低速下控制反向，且高速时方向错乱的情况。
+- **修复方案**：
+  - 将 `PhysicsCore.rotate_by_angular_velocity` 中更新核心四元数的 Hamilton 乘法公式调整为**左乘**（Pre-multiplication，即 `dq * q`），完全对齐原版行为，仅消除高角速度下的积分顺序漂移误差。
+  - 修复后经编译验证通过，姿态控制与摇杆指令完全恢复正确映射。
+
+### 5. 摇杆 HUD 油门超出范围及居中问题修复
+
+- **问题分析**：当油门通道使用 `MaxMidMin` 校准方式（校准值区间为 `[-1, 1]`）且未启用居中映射时，原 SticksHud 采用的 `t.get() * size - size / 2f` 计算公式会在油门最小时输出超出 HUD 边框的异常高度值（如 `-60` 像素，而 HUD 总尺寸为 `40` 像素，导致指示点向下超出了十字坐标范围），且摇杆物理居中（值为 `0.0`）时，指示点对应显示在 HUD 底部的归零刻度处。
+- **修复方案**：
+  - 参考了参考版本的实现方案，在 `Fpv20ConfigClientManual.java` 中引入配置参数 `throttle_display_in_center`（默认值为 `true`）。
+  - 在 `SticksHud.java` 中，对 `t()` 方法取值引入条件判断。当启用居中映射时，使用公式 `Math.round(this.t.get() * size / 2f)`。如此一来，当输入值为 `[-1, 1]` 时：油门最小 `-1.0` 对应 HUD 底部、居中 `0.0` 对应 HUD 十字中心、最大 `1.0` 对应 HUD 顶部，完全保持在十字坐标范围内且显示合理。
+  - 修复后编译验证成功，功能完全与参考版本一致。
+
+
