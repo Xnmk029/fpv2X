@@ -93,7 +93,24 @@ public class Fpv20ConfigClientManual {
         SCHEME_B  // 玩家代理模式 (Player Avatar Mode)
     }
 
+    public static enum PidPreset {
+        PERFECT,
+        SNAPPY,
+        NORMAL,
+        SOFT,
+        BOUNCEBACK
+    }
+
+    public static enum PropwashLevel {
+        PERFECT,
+        LOW,
+        MEDIUM,
+        HIGH
+    }
+
     public ControlMode controlMode = ControlMode.SCHEME_B; // 默认为方案B (Player Avatar Mode)
+    public PidPreset pidPreset = PidPreset.NORMAL;
+    public PropwashLevel propwashLevel = PropwashLevel.MEDIUM;
 
     /////////////////////////////////
     public float getCamera_angle() {
@@ -133,6 +150,8 @@ public class Fpv20ConfigClientManual {
         if (config.rates.yaw == null) config.rates.yaw = new RateAxis();
         if (config.physics == null) config.physics = new PhysicsSettings();
         if (config.controlMode == null) config.controlMode = ControlMode.SCHEME_B;
+        if (config.pidPreset == null) config.pidPreset = PidPreset.NORMAL;
+        if (config.propwashLevel == null) config.propwashLevel = PropwashLevel.MEDIUM;
         
         return config;
     }

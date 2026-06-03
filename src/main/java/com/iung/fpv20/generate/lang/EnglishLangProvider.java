@@ -61,5 +61,19 @@ public class EnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(TranslateKeys.BTN_SPEED_DISPLAY, "Speed: %s");
         translationBuilder.add(TranslateKeys.BTN_FLY, "Fly");
         translationBuilder.add(TranslateKeys.BTN_TELEMETRY_DEBUG, "Telemetry Debug Log: %s");
+
+        translationBuilder.add(TranslateKeys.TITLE_FLIGHT_BEHAVIOR, "Flight Behavior Options");
+        translationBuilder.add(TranslateKeys.BTN_FLIGHT_BEHAVIOR, "Flight Behavior Options");
+        translationBuilder.add(TranslateKeys.BTN_PID_PRESET_LABEL, "PID Preset: %s");
+        translationBuilder.add(TranslateKeys.BTN_PROPWASH_LEVEL_LABEL, "Propwash Intensity: %s");
+        translationBuilder.add(TranslateKeys.PRESET_PID_PERFECT, "Perfect");
+        translationBuilder.add(TranslateKeys.PRESET_PID_SNAPPY, "Snappy");
+        translationBuilder.add(TranslateKeys.PRESET_PID_NORMAL, "Normal");
+        translationBuilder.add(TranslateKeys.PRESET_PID_SOFT, "Soft");
+        translationBuilder.add(TranslateKeys.PRESET_PID_BOUNCEBACK, "Bounceback");
+        translationBuilder.add(TranslateKeys.PRESET_PROPWASH_PERFECT, "Perfect");
+        translationBuilder.add(TranslateKeys.PRESET_PROPWASH_LOW, "Low");
+        translationBuilder.add(TranslateKeys.PRESET_PROPWASH_MEDIUM, "Medium");
+        translationBuilder.add(TranslateKeys.PRESET_PROPWASH_HIGH, "High");
     }
 }

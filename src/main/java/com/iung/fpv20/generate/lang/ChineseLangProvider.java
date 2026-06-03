@@ -59,6 +59,20 @@ public class ChineseLangProvider extends FabricLanguageProvider {
         translationBuilder.add(TranslateKeys.BTN_SPEED_DISPLAY, "速度: %s");
         translationBuilder.add(TranslateKeys.BTN_FLY, "飞行");
         translationBuilder.add(TranslateKeys.BTN_TELEMETRY_DEBUG, "调试遥测日志: %s");
+
+        translationBuilder.add(TranslateKeys.TITLE_FLIGHT_BEHAVIOR, "飞控行为设置");
+        translationBuilder.add(TranslateKeys.BTN_FLIGHT_BEHAVIOR, "飞控行为设置");
+        translationBuilder.add(TranslateKeys.BTN_PID_PRESET_LABEL, "PID 响应预设: %s");
+        translationBuilder.add(TranslateKeys.BTN_PROPWASH_LEVEL_LABEL, "洗桨抖动强度: %s");
+        translationBuilder.add(TranslateKeys.PRESET_PID_PERFECT, "完美");
+        translationBuilder.add(TranslateKeys.PRESET_PID_SNAPPY, "灵敏");
+        translationBuilder.add(TranslateKeys.PRESET_PID_NORMAL, "正常");
+        translationBuilder.add(TranslateKeys.PRESET_PID_SOFT, "柔软");
+        translationBuilder.add(TranslateKeys.PRESET_PID_BOUNCEBACK, "回弹");
+        translationBuilder.add(TranslateKeys.PRESET_PROPWASH_PERFECT, "完美");
+        translationBuilder.add(TranslateKeys.PRESET_PROPWASH_LOW, "低");
+        translationBuilder.add(TranslateKeys.PRESET_PROPWASH_MEDIUM, "中");
+        translationBuilder.add(TranslateKeys.PRESET_PROPWASH_HIGH, "高");
     }
 
 

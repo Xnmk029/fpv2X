@@ -69,20 +69,9 @@ public class OptionsMainScreen extends BackableScreen {
                 .dimensions(j, k, width, height).build());
         
         k += 24;
-        String ratesTypeText = Fpv20Client.config1.rates.type;
-        Text rateModelLabel = Text.translatable(TranslateKeys.BTN_RATES_MODEL, ratesTypeText != null ? ratesTypeText.toUpperCase() : "BETAFLIGHT");
-        this.addDrawableChild(ButtonWidget.builder(rateModelLabel, (btn) -> {
-                    String currentType = Fpv20Client.config1.rates.type;
-                    String nextType = "betaflight";
-                    if ("betaflight".equalsIgnoreCase(currentType)) {
-                        nextType = "actual";
-                    } else if ("actual".equalsIgnoreCase(currentType)) {
-                        nextType = "kiss";
-                    }
-                    Fpv20Client.config1.rates.type = nextType;
-                    Fpv20Client.config1.save();
+        this.addDrawableChild(ButtonWidget.builder(com.iung.fpv20.consts.Texts.BTN_FLIGHT_BEHAVIOR, (btn) -> {
                     if (this.client != null) {
-                        this.client.setScreen(new OptionsMainScreen(this.parent));
+                        this.client.setScreen(new FlightBehaviorScreen(this));
                     }
                 })
                 .dimensions(i, k, width, height).build());

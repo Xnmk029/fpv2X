@@ -177,3 +177,33 @@
 ### 3. 验证结果
 
 - 运行了 `./gradlew compileClientJava` 及 `./gradlew build -x test`，构建结果为 BUILD SUCCESSFUL，编译正常且不存在 API 兼容问题。
+
+
+## 任务时间
+
+2026-06-04
+
+## 任务目标
+
+在 FPV2X 模组中引入 PID 闭环姿态追踪模型与洗桨效应物理模拟，并实现独立的飞控行为二级配置菜单。
+
+## 过程记录
+
+### 1. 物理层实现
+
+- **VirtualPIDController.java**：新增虚拟 PID 控制器，支持 Perfect（完美）、Snappy（灵敏）、Normal（正常）、Soft（柔软）、Bounceback（回弹）五种 PID 追踪预设，并在控制输出端集成了一阶低通滤波器（PT1 Lowpass Filter）以模拟电机拉力建立的物理延迟，成功实现了欠阻尼状态下的姿态抖动回弹（Bounceback）效果。
+- **PropwashSimulator.java**：新增洗桨气动模拟器，通过检测无人机相对机架 Z 轴的下落速度向量和油门开度，在触发阈值（下落速度 > 1.5 m/s 且油门 > 10%）下生成一阶过滤的低频气动随机噪声（粉红噪声特征），支持 Perfect、Low、Medium、High 四档强度设置。
+- **GlobalFlying.java**：重构 `apply_rotation_with_rates` 方法，将 Rate 角速度解算输出作为期望角速度（SetPoint），传入 `VirtualPIDController` 中进行闭环姿态积分，并在实际飞行角速度中叠加洗桨气动扰动，最后更新四元数。
+
+### 2. 界面与配置层重构
+
+- **Fpv20ConfigClientManual.java**：添加 `PidPreset` 和 `PropwashLevel` 枚举类及字段，同时加入空安全保障机制。
+- **OptionsMainScreen.java**：替换原有的直选 Rates 按钮，修改为打开“飞控行为设置”二级菜单。
+- **FlightBehaviorScreen.java**：新建二级菜单，统一展示速率模式、PID 响应预设以及洗桨抖动强度的切换按钮，支持即时保存与配置重新加载。
+- **语言生成与国际化**：在 `ChineseLangProvider` 和 `EnglishLangProvider` 中加入中英文翻译并执行 Gradle `runDatagen` 任务，成功自动构建并写入 `zh_cn.json` 与 `en_us.json`。
+
+### 3. 验证结果
+
+- 执行 `.\gradlew compileJava` 编译成功。
+- 执行 `.\gradlew runDatagen` 数据生成正常。
+- 执行 `.\gradlew runclient` 成功拉起游戏客户端，实际飞行调试证实 PID 五档响应以及洗桨在给油拉起时的频段振动符合预期。

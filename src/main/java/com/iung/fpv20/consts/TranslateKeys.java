@@ -52,4 +52,19 @@ public final class TranslateKeys {
     public static final String BTN_SPEED_DISPLAY = "fpv20.btn.speed_display";
     public static final String BTN_FLY = "fpv20.btn.fly";
     public static final String BTN_TELEMETRY_DEBUG = "fpv20.btn.telemetry_debug";
+
+    // PID and Propwash Behavior Submenu keys
+    public static final String TITLE_FLIGHT_BEHAVIOR = "fpv20.title.flight_behavior";
+    public static final String BTN_FLIGHT_BEHAVIOR = "fpv20.btn.flight_behavior";
+    public static final String BTN_PID_PRESET_LABEL = "fpv20.btn.pid_preset_label";
+    public static final String BTN_PROPWASH_LEVEL_LABEL = "fpv20.btn.propwash_level_label";
+    public static final String PRESET_PID_PERFECT = "fpv20.preset.pid.perfect";
+    public static final String PRESET_PID_SNAPPY = "fpv20.preset.pid.snappy";
+    public static final String PRESET_PID_NORMAL = "fpv20.preset.pid.normal";
+    public static final String PRESET_PID_SOFT = "fpv20.preset.pid.soft";
+    public static final String PRESET_PID_BOUNCEBACK = "fpv20.preset.pid.bounceback";
+    public static final String PRESET_PROPWASH_PERFECT = "fpv20.preset.propwash.perfect";
+    public static final String PRESET_PROPWASH_LOW = "fpv20.preset.propwash.low";
+    public static final String PRESET_PROPWASH_MEDIUM = "fpv20.preset.propwash.medium";
+    public static final String PRESET_PROPWASH_HIGH = "fpv20.preset.propwash.high";
 }
