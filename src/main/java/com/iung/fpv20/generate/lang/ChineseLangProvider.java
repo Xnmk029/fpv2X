@@ -58,6 +58,7 @@ public class ChineseLangProvider extends FabricLanguageProvider {
         translationBuilder.add(TranslateKeys.BTN_LOAD_FREESTYLE_PRESET, "加载：专业花飞预设");
         translationBuilder.add(TranslateKeys.BTN_SPEED_DISPLAY, "速度: %s");
         translationBuilder.add(TranslateKeys.BTN_FLY, "飞行");
+        translationBuilder.add(TranslateKeys.BTN_TELEMETRY_DEBUG, "调试遥测日志: %s");
     }
 
 

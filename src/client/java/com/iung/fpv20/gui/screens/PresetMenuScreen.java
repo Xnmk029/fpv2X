@@ -48,5 +48,16 @@ public class PresetMenuScreen extends BackableScreen {
                     }
                 })
                 .dimensions(i, k, width, height).build());
+        k += 24;
+
+        Text debugTextLabel = Text.translatable(com.iung.fpv20.consts.TranslateKeys.BTN_TELEMETRY_DEBUG, Fpv20Client.config1.show_telemetry_debug ? Text.translatable("gui.yes") : Text.translatable("gui.no"));
+        this.addDrawableChild(ButtonWidget.builder(debugTextLabel, (btn) -> {
+                    Fpv20Client.config1.show_telemetry_debug = !Fpv20Client.config1.show_telemetry_debug;
+                    Fpv20Client.config1.save();
+                    if (this.client != null) {
+                        this.client.setScreen(new PresetMenuScreen(this.parent));
+                    }
+                })
+                .dimensions(i, k, width, height).build());
     }
 }

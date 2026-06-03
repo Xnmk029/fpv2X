@@ -47,4 +47,5 @@ public final class Texts {
     public static final Text BTN_LOAD_FREESTYLE_PRESET = Text.translatable(TranslateKeys.BTN_LOAD_FREESTYLE_PRESET);
     public static final Text BTN_SPEED_DISPLAY = Text.translatable(TranslateKeys.BTN_SPEED_DISPLAY);
     public static final Text BTN_FLY = Text.translatable(TranslateKeys.BTN_FLY);
+    public static final Text BTN_TELEMETRY_DEBUG = Text.translatable(TranslateKeys.BTN_TELEMETRY_DEBUG);
 }

@@ -176,24 +176,21 @@ public abstract class GameRendererMixin implements com.iung.fpv20.mixin_utils.Ga
     )
     public void fpv20_renderDroneInFirstPerson(MatrixStack matrices, Camera camera, float tickDelta, CallbackInfo ci) {
         if (GlobalFlying.getFlying()) {
-            // Render drone model in first-person view so propellers are visible at screen edges
             MinecraftClient client = MinecraftClient.getInstance();
+            if (!client.options.getPerspective().isFirstPerson()) {
+                ci.cancel();
+                return;
+            }
             if (client.player != null) {
                 matrices.push();
 
-                // Position the drone body relative to camera: slightly below and behind
-                // the camera to simulate real FPV perspective where propellers are visible
-                 float camAngle = Fpv20Client.config1.getCamera_angle();
-                 org.joml.Quaternionf q = new org.joml.Quaternionf(GlobalFlying.G.droneRotation).conjugate();
-                 
-                 matrices.multiply(q);
-                 matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0f));
-                 matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camAngle));
-                 matrices.translate(0.0f, -0.1f, -0.28f);
+                org.joml.Quaternionf q = new org.joml.Quaternionf(GlobalFlying.G.droneRotation).conjugate();
+                matrices.multiply(q);
+                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0f));
+                matrices.translate(0.0f, -0.15f, -0.30f);
 
-                // Render full drone model using immediate-mode vertex consumer
                 VertexConsumerProvider.Immediate immediate = client.getBufferBuilders().getEntityVertexConsumers();
-                int light = 0xF000F0; // Full brightness for FPV overlay
+                int light = 0xF000F0;
                 DroneModelRenderer.renderDrone(
                         matrices,
                         immediate,

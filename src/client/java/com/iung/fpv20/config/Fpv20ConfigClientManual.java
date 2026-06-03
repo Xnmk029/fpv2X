@@ -58,6 +58,7 @@ public class Fpv20ConfigClientManual {
     public String slow_motion_switch_name = "sm";
 
     public boolean throttle_display_in_center = true;
+    public boolean show_telemetry_debug = false;
 
     // --- Rates & Physics Configurations ---
     public static class RateAxis {

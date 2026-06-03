@@ -88,50 +88,52 @@ public class SticksHud implements HudRenderCallback {
         }
 
         // Live Telemetry Logging for Debugging
-        net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
-        if (mc.textRenderer != null) {
-            int logY = 10;
-            int logX = 10;
-            
-            // Background panel for telemetry
-            drawContext.fill(logX - 4, logY - 4, logX + 270, logY + 96, 0x99000000);
-            
-            drawContext.drawTextWithShadow(mc.textRenderer, "=== FPV2X TELEMETRY DEBUG LOG ===", logX, logY, 0xFF00FFFF);
-            logY += 12;
-            
-            // 1. Drone Rotation Quaternion (World rotation matrix)
-            org.joml.Quaternionf qWorld = GlobalFlying.G.droneRotation;
-            if (qWorld != null) {
-                drawContext.drawTextWithShadow(mc.textRenderer, String.format("Q_world: [%.3f, %.3f, %.3f, %.3f]", qWorld.x, qWorld.y, qWorld.z, qWorld.w), logX, logY, 0xFFFFFFFF);
-                logY += 10;
-                // Physical rotation (Conjugate)
-                org.joml.Quaternionf qPhys = new org.joml.Quaternionf(qWorld).conjugate();
-                drawContext.drawTextWithShadow(mc.textRenderer, String.format("Q_phys:  [%.3f, %.3f, %.3f, %.3f]", qPhys.x, qPhys.y, qPhys.z, qPhys.w), logX, logY, 0xFFFFFFFF);
-                logY += 10;
+        if (Fpv20Client.config1.show_telemetry_debug) {
+            net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+            if (mc.textRenderer != null) {
+                int logY = 10;
+                int logX = 10;
                 
-                // Euler Angles extracted from Q_phys
-                org.joml.Vector3f ypr = com.iung.fpv20.physics.PhysicsCore.from_quaternion_to_ypr_deg(qPhys);
-                drawContext.drawTextWithShadow(mc.textRenderer, String.format("YPR_phys: Yaw=%.1f, Pitch=%.1f, Roll=%.1f", ypr.x, ypr.y, ypr.z), logX, logY, 0xFFFFFF00);
+                // Background panel for telemetry
+                drawContext.fill(logX - 4, logY - 4, logX + 270, logY + 96, 0x99000000);
+                
+                drawContext.drawTextWithShadow(mc.textRenderer, "=== FPV2X TELEMETRY DEBUG LOG ===", logX, logY, 0xFF00FFFF);
+                logY += 12;
+                
+                // 1. Drone Rotation Quaternion (World rotation matrix)
+                org.joml.Quaternionf qWorld = GlobalFlying.G.droneRotation;
+                if (qWorld != null) {
+                    drawContext.drawTextWithShadow(mc.textRenderer, String.format("Q_world: [%.3f, %.3f, %.3f, %.3f]", qWorld.x, qWorld.y, qWorld.z, qWorld.w), logX, logY, 0xFFFFFFFF);
+                    logY += 10;
+                    // Physical rotation (Conjugate)
+                    org.joml.Quaternionf qPhys = new org.joml.Quaternionf(qWorld).conjugate();
+                    drawContext.drawTextWithShadow(mc.textRenderer, String.format("Q_phys:  [%.3f, %.3f, %.3f, %.3f]", qPhys.x, qPhys.y, qPhys.z, qPhys.w), logX, logY, 0xFFFFFFFF);
+                    logY += 10;
+                    
+                    // Euler Angles extracted from Q_phys
+                    org.joml.Vector3f ypr = com.iung.fpv20.physics.PhysicsCore.from_quaternion_to_ypr_deg(qPhys);
+                    drawContext.drawTextWithShadow(mc.textRenderer, String.format("YPR_phys: Yaw=%.1f, Pitch=%.1f, Roll=%.1f", ypr.x, ypr.y, ypr.z), logX, logY, 0xFFFFFF00);
+                    logY += 10;
+                }
+                
+                // 2. Active Drone Entity info
+                if (GlobalFlying.G.activeClientDroneEntity != null) {
+                    com.iung.fpv20.entity.DroneEntity droneEnt = GlobalFlying.G.activeClientDroneEntity;
+                    net.minecraft.util.math.Vec3d pos = droneEnt.getPos();
+                    org.joml.Quaternionf qEnt = droneEnt.getQuaternion();
+                    drawContext.drawTextWithShadow(mc.textRenderer, String.format("Pos: [%.2f, %.2f, %.2f]", pos.x, pos.y, pos.z), logX, logY, 0xFFFFFFFF);
+                    logY += 10;
+                    drawContext.drawTextWithShadow(mc.textRenderer, String.format("Q_entity: [%.3f, %.3f, %.3f, %.3f]", qEnt.x, qEnt.y, qEnt.z, qEnt.w), logX, logY, 0xFF55FFFF);
+                    logY += 10;
+                } else {
+                    drawContext.drawTextWithShadow(mc.textRenderer, "Active Drone Entity: NULL (Scheme B)", logX, logY, 0xFFFF5555);
+                    logY += 10;
+                }
+                
+                // 3. Camera Angle Config
+                drawContext.drawTextWithShadow(mc.textRenderer, String.format("Camera Angle: %.1f deg", Fpv20Client.config1.getCamera_angle()), logX, logY, 0xFFAAAAAA);
                 logY += 10;
             }
-            
-            // 2. Active Drone Entity info
-            if (GlobalFlying.G.activeClientDroneEntity != null) {
-                com.iung.fpv20.entity.DroneEntity droneEnt = GlobalFlying.G.activeClientDroneEntity;
-                net.minecraft.util.math.Vec3d pos = droneEnt.getPos();
-                org.joml.Quaternionf qEnt = droneEnt.getQuaternion();
-                drawContext.drawTextWithShadow(mc.textRenderer, String.format("Pos: [%.2f, %.2f, %.2f]", pos.x, pos.y, pos.z), logX, logY, 0xFFFFFFFF);
-                logY += 10;
-                drawContext.drawTextWithShadow(mc.textRenderer, String.format("Q_entity: [%.3f, %.3f, %.3f, %.3f]", qEnt.x, qEnt.y, qEnt.z, qEnt.w), logX, logY, 0xFF55FFFF);
-                logY += 10;
-            } else {
-                drawContext.drawTextWithShadow(mc.textRenderer, "Active Drone Entity: NULL (Scheme B)", logX, logY, 0xFFFF5555);
-                logY += 10;
-            }
-            
-            // 3. Camera Angle Config
-            drawContext.drawTextWithShadow(mc.textRenderer, String.format("Camera Angle: %.1f deg", Fpv20Client.config1.getCamera_angle()), logX, logY, 0xFFAAAAAA);
-            logY += 10;
         }
     }
 

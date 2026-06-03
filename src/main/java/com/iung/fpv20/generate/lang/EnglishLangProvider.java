@@ -60,5 +60,6 @@ public class EnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(TranslateKeys.BTN_LOAD_FREESTYLE_PRESET, "Load: Pro Freestyle Preset");
         translationBuilder.add(TranslateKeys.BTN_SPEED_DISPLAY, "Speed: %s");
         translationBuilder.add(TranslateKeys.BTN_FLY, "Fly");
+        translationBuilder.add(TranslateKeys.BTN_TELEMETRY_DEBUG, "Telemetry Debug Log: %s");
     }
 }

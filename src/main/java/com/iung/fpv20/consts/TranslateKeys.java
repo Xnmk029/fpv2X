@@ -51,4 +51,5 @@ public final class TranslateKeys {
     public static final String BTN_LOAD_FREESTYLE_PRESET = "fpv20.btn.load_freestyle_preset";
     public static final String BTN_SPEED_DISPLAY = "fpv20.btn.speed_display";
     public static final String BTN_FLY = "fpv20.btn.fly";
+    public static final String BTN_TELEMETRY_DEBUG = "fpv20.btn.telemetry_debug";
 }

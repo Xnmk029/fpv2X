@@ -28,6 +28,7 @@
   "fpv20.btn.show_input": "show input",
   "fpv20.btn.speed_display": "Speed: %s",
   "fpv20.btn.start": "start",
+  "fpv20.btn.telemetry_debug": "Telemetry Debug Log: %s",
   "fpv20.keybind.osd": "Toggle OSD",
   "fpv20.keybinds.category": "fpv20",
   "fpv20.rate.1": "rate:%s",
